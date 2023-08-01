@@ -1,0 +1,10 @@
+
+CHUGIN_PATH=~/.chuck/lib/
+
+FLAGS=-D__LINUX_ALSA__ -D__PLATFORM_LINUX__ -I$(CK_SRC_PATH) -fPIC
+LDFLAGS=-shared -lstdc++
+
+FLAGS+=$(shell python3-config --cflags)
+
+LD=gcc
+CXX=g++

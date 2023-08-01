@@ -14,6 +14,7 @@
 // general includes
 #include <stdio.h>
 #include <limits.h>
+#include <iostream>
 
 // declaration of chugin constructor
 CK_DLL_CTOR(hydra_ctor);
@@ -115,22 +116,21 @@ CK_DLL_QUERY( Hydra )
 CK_DLL_CTOR(hydra_ctor)
 {
   char* argv[4] = { "myprog", "arg1", "arg2", "arg 3" };
-  // wchar_t *program = Py_DecodeLocale(argv[0], NULL);
-  // if (program == NULL) {
-  //   fprintf(stderr, "Fatal error: cannot decode argv[0]\n");
-  //   exit(1);
-  // }
-  // Py_SetProgramName(program);  /* optional but recommended */
-  const wchar_t* test = L"poop";
-  Py_SetProgramName(test);  /* optional but recommended */  
-  // Py_Initialize();
-  // PyRun_SimpleString("from time import time,ctime\n"
-  //                    "print('Today is', ctime(time()))\n");
-  // if (Py_FinalizeEx() < 0) {
-  //   exit(120);
-  // }
-  // PyMem_RawFree(program);
-  // // return 0;
+  wchar_t *program = Py_DecodeLocale(argv[0], NULL);
+  if (program == NULL) {
+    fprintf(stderr, "Fatal error: cannot decode argv[0]\n");
+    exit(1);
+  }
+  Py_SetProgramName(program);  /* optional but recommended */
+  // const wchar_t* test = L"poop";
+  // Py_SetProgramName(test);  /* optional but recommended */  
+  Py_Initialize();
+  PyRun_SimpleString("from time import time,ctime\n"
+                     "print('Today is', ctime(time()))\n");
+  if (Py_FinalizeEx() < 0) {
+    exit(120);
+  }
+  PyMem_RawFree(program);
     
   // get the offset where we'll store our internal c++ class pointer
   OBJ_MEMBER_INT(SELF, hydra_data_offset) = 0;
@@ -176,10 +176,11 @@ CK_DLL_TICK(hydra_tick)
 // example implementation for setter
 CK_DLL_MFUN(hydra_setParam)
 {
-    // get our c++ class pointer
-    Hydra * h_obj = (Hydra *) OBJ_MEMBER_INT(SELF, hydra_data_offset);
-    // set the return value
-    RETURN->v_float = h_obj->setParam(GET_NEXT_FLOAT(ARGS));
+  std::cout << "here\n";
+  // get our c++ class pointer
+  Hydra * h_obj = (Hydra *) OBJ_MEMBER_INT(SELF, hydra_data_offset);
+  // set the return value
+  RETURN->v_float = h_obj->setParam(GET_NEXT_FLOAT(ARGS));
 }
 
 

@@ -114,14 +114,32 @@ CK_DLL_QUERY( Hydra )
 // implementation for the constructor
 CK_DLL_CTOR(hydra_ctor)
 {
-    // get the offset where we'll store our internal c++ class pointer
-    OBJ_MEMBER_INT(SELF, hydra_data_offset) = 0;
+  char* argv[4] = { "myprog", "arg1", "arg2", "arg 3" };
+  // wchar_t *program = Py_DecodeLocale(argv[0], NULL);
+  // if (program == NULL) {
+  //   fprintf(stderr, "Fatal error: cannot decode argv[0]\n");
+  //   exit(1);
+  // }
+  // Py_SetProgramName(program);  /* optional but recommended */
+  const wchar_t* test = L"poop";
+  Py_SetProgramName(test);  /* optional but recommended */  
+  // Py_Initialize();
+  // PyRun_SimpleString("from time import time,ctime\n"
+  //                    "print('Today is', ctime(time()))\n");
+  // if (Py_FinalizeEx() < 0) {
+  //   exit(120);
+  // }
+  // PyMem_RawFree(program);
+  // // return 0;
     
-    // instantiate our internal c++ class representation
-    Hydra * h_obj = new Hydra(API->vm->get_srate(API, SHRED));
+  // get the offset where we'll store our internal c++ class pointer
+  OBJ_MEMBER_INT(SELF, hydra_data_offset) = 0;
     
-    // store the pointer in the ChucK object member
-    OBJ_MEMBER_INT(SELF, hydra_data_offset) = (t_CKINT) h_obj;
+  // instantiate our internal c++ class representation
+  Hydra * h_obj = new Hydra(API->vm->get_srate(API, SHRED));
+    
+  // store the pointer in the ChucK object member
+  OBJ_MEMBER_INT(SELF, hydra_data_offset) = (t_CKINT) h_obj;
 }
 
 

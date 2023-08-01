@@ -2,9 +2,12 @@
 CHUGIN_PATH=~/.chuck/lib/
 
 FLAGS=-D__LINUX_ALSA__ -D__PLATFORM_LINUX__ -I$(CK_SRC_PATH) -fPIC
-LDFLAGS=-shared -lstdc++
 
+# adding python includes and links 
+# taken from here https://manpages.ubuntu.com/manpages/jammy/man1/x86_64-linux-gnu-python2.7-config.1.html
 FLAGS+=$(shell python3-config --cflags)
+LDFLAGS+=$(shell python3-config --ldflags --embed)
+LDFLAGS+=-shared -lstdc++
 
 LD=gcc
 CXX=g++

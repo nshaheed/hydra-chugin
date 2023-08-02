@@ -126,6 +126,9 @@ CK_DLL_CTOR(hydra_ctor)
   // Py_SetProgramName(test);  /* optional but recommended */  
   Py_Initialize();
   PyRun_SimpleString("from time import time,ctime\n"
+                     "import hydra\n"
+                     // "import sys\n"
+                     // "import socket\n"
                      "print('Today is', ctime(time()))\n");
   if (Py_FinalizeEx() < 0) {
     exit(120);

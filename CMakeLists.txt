@@ -39,7 +39,7 @@ target_link_libraries(hydra PRIVATE Python::Python)
 include_directories(${Python_INCLUDE_DIRS})
 target_link_libraries(hydra ${PYTHON_LIBRARIES})
 # I don't think this is necessary?
-SET(CMAKE_INSTALL_RPATH Python::Python)
+# SET(CMAKE_INSTALL_RPATH Python::Python)
 
 # Include header directories
 target_include_directories(hydra PUBLIC

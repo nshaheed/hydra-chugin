@@ -7,6 +7,7 @@
    - [DONE] pass in args to python program (string interpolation?)
    - [DONE] take in the python output as std in (after converting to json)
    - [DONE] parse in as json
+   - [DONE] make python script a string instead of a file
    - [TODO] structure as only strings
    - [TODO] handle error case: if json conversion fails, print error and return nil
    - outputs dir
@@ -35,6 +36,23 @@
 
 #include "nlohmann/json.hpp"
 using json = nlohmann::json;
+
+// The python program to be run. This is embedded here rather than
+// as a file as it means I don't have to manage where the script is
+// relative to the chugin (which seems tricky to do)
+std::string config_init = R"(
+import json
+import sys
+
+from hydra import compose, initialize
+from omegaconf import OmegaConf
+
+# context initialization
+with initialize(version_base=None, config_path=sys.argv[1]):
+    cfg = compose(config_name=sys.argv[2], overrides=['+db=mysql', '+db.user=me'])
+    container = OmegaConf.to_container(cfg, resolve=True)
+    print(json.dumps(container))
+)";
 
 // declaration of chugin constructor
 CK_DLL_CTOR(hydra_ctor);
@@ -82,7 +100,7 @@ public:
   // the dirs
   void init(std::string config_path, std::string config_name) {
     // This is hacky but what are ya gonna do?
-    std::string cmd = "python config_init.py " + config_path + " " + config_name;
+    std::string cmd = "python -c \"" + config_init + "\" " + config_path + " " + config_name;
     std::string result = exec(cmd);
 
     // TODO add a try catch block here to handle parse error
@@ -173,8 +191,6 @@ CK_DLL_CTOR(hydra_ctor)
     
   // store the pointer in the ChucK object member
   OBJ_MEMBER_INT(SELF, hydra_data_offset) = (t_CKINT) h_obj;
-
-  std::cout << "leaving constructor" << std::endl;
 }
 
 

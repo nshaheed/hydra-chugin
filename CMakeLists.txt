@@ -21,7 +21,12 @@ set(Sources
   "Hydra.cpp"
   )
 
-add_library(hydra SHARED ${CK_SOURCES} ${Sources})
+# target_include_directories(nlohmann PRIVATE "nlohmann")
+FILE(GLOB NLOHMANN
+  ${CMAKE_CURRENT_SOURCE_DIR}/nlohmann/json.hpp
+  )
+
+add_library(hydra SHARED ${CK_SOURCES} ${Sources} ${NLOHMANN})
 
 set_target_properties(hydra PROPERTIES OUTPUT_NAME "Hydra.chug")
 set_target_properties(hydra PROPERTIES PREFIX "")

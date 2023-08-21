@@ -74,6 +74,7 @@ CK_DLL_MFUN(hydra_get);
 CK_DLL_MFUN(hydra_get_str);
 CK_DLL_MFUN(hydra_get_int);
 CK_DLL_MFUN(hydra_get_float);
+CK_DLL_MFUN(hydra_get_bool);
 
 // this is a special offset reserved for Chugin internal data
 t_CKINT hydra_data_offset = 0;
@@ -90,7 +91,8 @@ private:
   using value_type = std::variant
     <std::map<std::string, Hydra*>,
      std::string,
-     double
+     double,
+     bool
      >;
   value_type value;
 
@@ -108,6 +110,10 @@ public:
   }
 
   Hydra(double val) {
+    value = val;
+  }
+
+  Hydra(bool val) {
     value = val;
   }
 
@@ -168,6 +174,10 @@ public:
         double num_val = val.template get<double>();
         Hydra * elem = new Hydra(num_val);
         values[key] = elem;
+      } else if (val.is_boolean()) {
+        bool bool_val = val.template get<bool>();
+        Hydra * elem = new Hydra(bool_val);
+        values[key] = elem;
       }
     }
 
@@ -198,6 +208,11 @@ public:
 
   t_CKFLOAT get_float() {
     t_CKFLOAT val = std::get<double>(value);
+    return val;
+  }
+
+  t_CKINT get_bool() {
+    t_CKINT val = (int)std::get<bool>(value);
     return val;
   }
 
@@ -265,6 +280,7 @@ CK_DLL_QUERY( Hydra )
     QUERY->add_mfun(QUERY, hydra_get_str, "string", "get_string");
     QUERY->add_mfun(QUERY, hydra_get_int, "int", "get_int");
     QUERY->add_mfun(QUERY, hydra_get_float, "float", "get_float");
+    QUERY->add_mfun(QUERY, hydra_get_bool, "int", "get_bool");
     
     // this reserves a variable in the ChucK internal class to store 
     // referene to the c++ class we defined above
@@ -380,4 +396,12 @@ CK_DLL_MFUN(hydra_get_float)
     Hydra * h_obj = (Hydra *) OBJ_MEMBER_INT(SELF, hydra_data_offset);
 
     RETURN->v_float = h_obj->get_float();;
+}
+
+CK_DLL_MFUN(hydra_get_bool)
+{
+    // get our c++ class pointer
+    Hydra * h_obj = (Hydra *) OBJ_MEMBER_INT(SELF, hydra_data_offset);
+
+    RETURN->v_int = h_obj->get_bool();;
 }

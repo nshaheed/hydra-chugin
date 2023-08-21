@@ -6,6 +6,7 @@ class HydraTest extends Assert {
         // true => exitOnFailure;
         testGetStr();
         testGetInt();
+        testBool();
         testGetFloat();
         testGetNested();
     }
@@ -36,6 +37,13 @@ class HydraTest extends Assert {
         3.5 => float want;
 
         assertEquals(want, got, 0.01);
+    }
+
+    public void testBool() {
+        h.get("test_bool").get_bool() => int got;
+        true => int want;
+
+        assertEquals(want, got);
     }
 }
 

@@ -1,4 +1,5 @@
 test_num: 3
+test_float: 3.5
 test_str: "poop"
 struct:
   val1: 17

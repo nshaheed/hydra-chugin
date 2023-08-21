@@ -72,6 +72,8 @@ CK_DLL_MFUN(hydra_getParam);
 CK_DLL_MFUN(hydra_init);
 CK_DLL_MFUN(hydra_get);
 CK_DLL_MFUN(hydra_get_str);
+CK_DLL_MFUN(hydra_get_int);
+CK_DLL_MFUN(hydra_get_float);
 
 // this is a special offset reserved for Chugin internal data
 t_CKINT hydra_data_offset = 0;
@@ -87,7 +89,8 @@ private:
   // map of hydra configs. Here configs are recusively defined.
   using value_type = std::variant
     <std::map<std::string, Hydra*>,
-     std::string
+     std::string,
+     double
      >;
   value_type value;
 
@@ -101,6 +104,10 @@ public:
   }
 
   Hydra(std::string val) {
+    value = val;
+  }
+
+  Hydra(double val) {
     value = val;
   }
 
@@ -157,6 +164,10 @@ public:
         std::string str_val = val.template get<std::string>();
         Hydra * elem = new Hydra(str_val);
         values[key] = elem;
+      } else if (val.is_number()) {
+        double num_val = val.template get<double>();
+        Hydra * elem = new Hydra(num_val);
+        values[key] = elem;
       }
     }
 
@@ -177,6 +188,16 @@ public:
 
   std::string get_string() {
     std::string val = std::get<std::string>(value);
+    return val;
+  }
+
+  t_CKINT get_int() {
+    t_CKINT val = (int)std::get<double>(value);
+    return val;
+  }
+
+  t_CKFLOAT get_float() {
+    t_CKFLOAT val = std::get<double>(value);
     return val;
   }
 
@@ -242,6 +263,8 @@ CK_DLL_QUERY( Hydra )
     QUERY->add_arg(QUERY, "string", "key");
 
     QUERY->add_mfun(QUERY, hydra_get_str, "string", "get_string");
+    QUERY->add_mfun(QUERY, hydra_get_int, "int", "get_int");
+    QUERY->add_mfun(QUERY, hydra_get_float, "float", "get_float");
     
     // this reserves a variable in the ChucK internal class to store 
     // referene to the c++ class we defined above
@@ -341,4 +364,20 @@ CK_DLL_MFUN(hydra_get_str)
 
     std::string val = h_obj->get_string();
     RETURN->v_string = (Chuck_String*)API->object->create_string(API, SHRED, val.c_str());
+}
+
+CK_DLL_MFUN(hydra_get_int)
+{
+    // get our c++ class pointer
+    Hydra * h_obj = (Hydra *) OBJ_MEMBER_INT(SELF, hydra_data_offset);
+
+    RETURN->v_int = h_obj->get_int();;
+}
+
+CK_DLL_MFUN(hydra_get_float)
+{
+    // get our c++ class pointer
+    Hydra * h_obj = (Hydra *) OBJ_MEMBER_INT(SELF, hydra_data_offset);
+
+    RETURN->v_float = h_obj->get_float();;
 }

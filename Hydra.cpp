@@ -190,38 +190,35 @@ public:
          */
         Hydra * elem = new Hydra();
         elem->build_tree(val);
-        values[key] = elem;
+        std::get<1>(value)[key] = elem;
       } else if (val.is_string()) {
         std::string str_val = val.template get<std::string>();
         Hydra * elem = new Hydra(str_val);
-        values[key] = elem;
+        std::get<1>(value)[key] = elem;
       } else if (val.is_number()) {
         double num_val = val.template get<double>();
         Hydra * elem = new Hydra(num_val);
-        values[key] = elem;
+        std::get<1>(value)[key] = elem;
       } else if (val.is_boolean()) {
         bool bool_val = val.template get<bool>();
         Hydra * elem = new Hydra(bool_val);
-        values[key] = elem;
+        std::get<1>(value)[key] = elem;
       } else if (val.is_null()) {
         Hydra * elem = new Hydra(std::monostate{});
-        values[key] = elem;
+        std::get<1>(value)[key] = elem;
       }
     }
 
-    value = values;
+    // value = values;
   }
 
   void set(std::string key, Hydra* val) {
-    std::map values = std::get<1>(value);
-    values[key] = val;
-    value = values;
+    std::get<1>(value)[key] = val;
   }
 
   // Get hydra value to be transformed into a hydra class
   Hydra* get(std::string key) {
-    std::map values = std::get<1>(value);
-    return values[key];
+    return std::get<1>(value)[key];
   }
 
   std::string get_string() {

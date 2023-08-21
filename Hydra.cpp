@@ -113,17 +113,32 @@ private:
      std::string,
      double,
      bool,
-     std::monostate // use monostate for null
+     std::vector<Hydra*>
      >;
   value_type value;
 
 public:
   // constructor
-  Hydra()
-  {
-    // initialize empty map
-    std::map<std::string, Hydra*> val;
-    value = val;
+  // Hydra(json j)
+  // {
+  //   // initialize empty map
+  //   std::map<std::string, Hydra*> val;
+  //   value = val;
+  // }
+
+  Hydra(std::string config_path, std::string config_name) {
+    // This is hacky but what are ya gonna do?
+    std::string cmd = "python -c \"" + config_init + "\" " + config_path + " " + config_name;
+    std::string result = exec(cmd);
+
+    // TODO add a try catch block here to handle parse error
+    auto j = json::parse(result);
+
+    build_hydra(j);
+  }
+
+  Hydra(json j) {
+    build_hydra(j);
   }
 
   Hydra(std::string val) {
@@ -138,8 +153,16 @@ public:
     value = val;
   }
 
-  // Monotype means this is null.
-  Hydra(std::monostate val) {
+  Hydra(std::map<std::string, Hydra*> val) {
+    value = val;
+  }
+
+  Hydra(std::vector<Hydra*> val) {
+    value = val;
+  }
+
+  // initialize a null-valued Hydra
+  Hydra() {
   }
 
   // set parameter example
@@ -152,64 +175,43 @@ public:
   // get parameter example
   t_CKFLOAT getParam() { return m_param; }
 
-  // take in:
-  // - config_path
-  // - config_name
-  // - overrides (list of strings) (later)
-  //
-  // will pass things into python program and call
-  // the dirs
-  void init(std::string config_path, std::string config_name) {
-    // This is hacky but what are ya gonna do?
-    std::string cmd = "python -c \"" + config_init + "\" " + config_path + " " + config_name;
-    std::string result = exec(cmd);
+  void build_hydra(json j) {
+    if (j.is_string()) {
+      std::string str_val = j.template get<std::string>();
+      value = str_val;
+    } else if (j.is_number()) {
+      double num_val = j.template get<double>();
+      value = num_val;
+    } else if (j.is_boolean()) {
+      bool bool_val = j.template get<bool>();
+      value = bool_val;
+    } else if (j.is_null()) {
+      // This case does NOTHING for me. NOTHING.      I  HATE  YOU.
+    } else if (j.is_object()) {
+      // iterate through all elems to build up a map
+      std::map<std::string, Hydra*> vals;
 
-    // TODO add a try catch block here to handle parse error
-    auto j = json::parse(result);
+      for (auto& element : j.items()) {
+        auto val = element.value();
+        auto key = element.key();
 
-    this->build_tree(j);
-  }
-
-  void build_tree(json j) {
-    std::cout << "dump: " << j.dump() << std::endl;
-    // get map from variant
-    std::map values = std::get<1>(value);
-    
-    for (auto& element : j.items()) {
-      auto val = element.value();
-      auto key = element.key();
-      std::cout << "val: " << val << std::endl;
-      // build out object
-      if (val.is_object()) {
-        // figure this out
-        /*
-          - make a new hydra (default to empty map)
-          - call new_hyra.build_tree
-          - add to map
-          - done
-         */
-        Hydra * elem = new Hydra();
-        elem->build_tree(val);
-        std::get<1>(value)[key] = elem;
-      } else if (val.is_string()) {
-        std::string str_val = val.template get<std::string>();
-        Hydra * elem = new Hydra(str_val);
-        std::get<1>(value)[key] = elem;
-      } else if (val.is_number()) {
-        double num_val = val.template get<double>();
-        Hydra * elem = new Hydra(num_val);
-        std::get<1>(value)[key] = elem;
-      } else if (val.is_boolean()) {
-        bool bool_val = val.template get<bool>();
-        Hydra * elem = new Hydra(bool_val);
-        std::get<1>(value)[key] = elem;
-      } else if (val.is_null()) {
-        Hydra * elem = new Hydra(std::monostate{});
-        std::get<1>(value)[key] = elem;
+        Hydra * elem = new Hydra(val);
+        vals[key] = elem;
       }
-    }
 
-    // value = values;
+      value = vals;
+    } else if (j.is_array()) {
+      std::vector<Hydra*> vals;
+
+      for (auto& element : j.items()) {
+        auto val = element.value();
+
+        Hydra * elem = new Hydra(val);
+        vals.push_back(elem);
+      }
+
+      value = vals;
+    }
   }
 
   void set(std::string key, Hydra* val) {
@@ -334,12 +336,6 @@ CK_DLL_CTOR(hydra_ctor)
 {
   // get the offset where we'll store our internal c++ class pointer
   OBJ_MEMBER_INT(SELF, hydra_data_offset) = 0;
-    
-  // instantiate our internal c++ class representation
-  Hydra * h_obj = new Hydra();
-    
-  // store the pointer in the ChucK object member
-  OBJ_MEMBER_INT(SELF, hydra_data_offset) = (t_CKINT) h_obj;
 }
 
 
@@ -381,13 +377,14 @@ CK_DLL_MFUN(hydra_getParam)
 
 CK_DLL_MFUN(hydra_init)
 {
-  // get our c++ class pointer
-  Hydra * h_obj = (Hydra *) OBJ_MEMBER_INT(SELF, hydra_data_offset);
-
   std::string config_path = GET_NEXT_STRING_SAFE(ARGS);
   std::string config_name = GET_NEXT_STRING_SAFE(ARGS);
 
-  h_obj->init(config_path, config_name);
+  // instantiate our internal c++ class representation
+  Hydra * h_obj = new Hydra(config_path, config_name);
+
+  // store the pointer in the ChucK object member
+  OBJ_MEMBER_INT(SELF, hydra_data_offset) = (t_CKINT) h_obj;
 }
 
 

@@ -3,7 +3,7 @@ class HydraTest extends Assert {
     h.init("configs", "config");
 
     {
-        // true => exitOnFailure;
+        true => exitOnFailure;
         testGetStr();
         testGetInt();
         testBool();

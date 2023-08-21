@@ -8,7 +8,23 @@
    - [DONE] take in the python output as std in (after converting to json)
    - [DONE] parse in as json
    - [DONE] make python script a string instead of a file
-   - [DONE] structure as only strings
+   - [TODO] Handle types
+     - [DONE] String
+     - [DONE] Int
+     - [DONE] Float
+     - [DONE] Bool
+     - [TODO] (P1) Array
+       - only return list of Hydra
+     - [TODO] (P1) Dur 
+       - parse string as Dur
+     - [TODO] (P2) time 
+     - [TODO] (P2) complex
+     - [TODO] (P2) polar
+     - [TODO] (P2) vec3 
+     - [TODO] (P2) vec4 
+   - [TODO] is_nil() - now to handle?
+   - [TODO] set() 
+     - take in type, return Hydra
    - [TODO] handle error case: if json conversion fails, print error and return nil
    - [TODO] outputs dir
      - make outputs dir (mkdir -p): ./outputs/YYYY-MM-DD/HH-MM-SS/
@@ -76,6 +92,8 @@ CK_DLL_MFUN(hydra_get_int);
 CK_DLL_MFUN(hydra_get_float);
 CK_DLL_MFUN(hydra_get_bool);
 
+CK_DLL_MFUN(hydra_is_null);
+
 // this is a special offset reserved for Chugin internal data
 t_CKINT hydra_data_offset = 0;
 
@@ -89,10 +107,12 @@ private:
   // The values in a hydra config are either YAML values or a
   // map of hydra configs. Here configs are recusively defined.
   using value_type = std::variant
-    <std::map<std::string, Hydra*>,
+    <std::monostate,
+     std::map<std::string, Hydra*>,
      std::string,
      double,
-     bool
+     bool,
+     std::monostate // use monostate for null
      >;
   value_type value;
 
@@ -115,6 +135,10 @@ public:
 
   Hydra(bool val) {
     value = val;
+  }
+
+  // Monotype means this is null.
+  Hydra(std::monostate val) {
   }
 
   // set parameter example
@@ -147,8 +171,8 @@ public:
 
   void build_tree(json j) {
     std::cout << "dump: " << j.dump() << std::endl;
-    // crashing hereb
-    std::map values = std::get<0>(value);
+    // get map from variant
+    std::map values = std::get<1>(value);
     
     for (auto& element : j.items()) {
       auto val = element.value();
@@ -178,6 +202,9 @@ public:
         bool bool_val = val.template get<bool>();
         Hydra * elem = new Hydra(bool_val);
         values[key] = elem;
+      } else if (val.is_null()) {
+        Hydra * elem = new Hydra(std::monostate{});
+        values[key] = elem;
       }
     }
 
@@ -185,14 +212,14 @@ public:
   }
 
   void set(std::string key, Hydra* val) {
-    std::map values = std::get<0>(value);
+    std::map values = std::get<1>(value);
     values[key] = val;
     value = values;
   }
 
   // Get hydra value to be transformed into a hydra class
   Hydra* get(std::string key) {
-    std::map values = std::get<0>(value);
+    std::map values = std::get<1>(value);
     return values[key];
   }
 
@@ -214,6 +241,15 @@ public:
   t_CKINT get_bool() {
     t_CKINT val = (int)std::get<bool>(value);
     return val;
+  }
+
+  t_CKINT is_null() {
+    // check if variant is in monostate
+    if(value.index() == 0) {
+      return true;
+    }
+
+    return false;
   }
 
   // fetcha string from key. Either return string or raise an
@@ -281,6 +317,7 @@ CK_DLL_QUERY( Hydra )
     QUERY->add_mfun(QUERY, hydra_get_int, "int", "get_int");
     QUERY->add_mfun(QUERY, hydra_get_float, "float", "get_float");
     QUERY->add_mfun(QUERY, hydra_get_bool, "int", "get_bool");
+    QUERY->add_mfun(QUERY, hydra_is_null, "int", "is_null");
     
     // this reserves a variable in the ChucK internal class to store 
     // referene to the c++ class we defined above
@@ -404,4 +441,12 @@ CK_DLL_MFUN(hydra_get_bool)
     Hydra * h_obj = (Hydra *) OBJ_MEMBER_INT(SELF, hydra_data_offset);
 
     RETURN->v_int = h_obj->get_bool();;
+}
+
+CK_DLL_MFUN(hydra_is_null)
+{
+    // get our c++ class pointer
+    Hydra * h_obj = (Hydra *) OBJ_MEMBER_INT(SELF, hydra_data_offset);
+
+    RETURN->v_int = h_obj->is_null();;
 }

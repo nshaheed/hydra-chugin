@@ -45,6 +45,11 @@ class HydraTest extends Assert {
 
         assertEquals(want, got);
     }
+
+    public void testNull() {
+        assertTrue(h.get("test_null").is_null());
+        assertFalse(h.get("test_int").is_null());
+    }
 }
 
 HydraTest hydraTest;

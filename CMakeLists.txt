@@ -32,6 +32,8 @@ set_target_properties(hydra PROPERTIES OUTPUT_NAME "Hydra.chug")
 set_target_properties(hydra PROPERTIES PREFIX "")
 set_target_properties(hydra PROPERTIES SUFFIX "")
 
+target_compile_features(hydra PRIVATE cxx_std_17)
+
 target_compile_definitions(hydra
   PUBLIC
   # USE_BUILTIN_FFT

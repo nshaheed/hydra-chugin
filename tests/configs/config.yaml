@@ -1,1 +1,5 @@
-test: 3
+test_num: 3
+test_str: "poop"
+struct:
+  val1: 17
+  val_str: "pooop"

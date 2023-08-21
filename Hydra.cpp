@@ -8,14 +8,14 @@
    - [DONE] take in the python output as std in (after converting to json)
    - [DONE] parse in as json
    - [DONE] make python script a string instead of a file
-   - [TODO] structure as only strings
+   - [DONE] structure as only strings
    - [TODO] handle error case: if json conversion fails, print error and return nil
-   - outputs dir
+   - [TODO] outputs dir
      - make outputs dir (mkdir -p): ./outputs/YYYY-MM-DD/HH-MM-SS/
        - alternatively, have hydra make this and pass it as metadata (it already will?)
-   - maybe have more structured dict
+   - [TODO] maybe have more structured dict
      - hydra type
-       - hydra.get("key"): returns Hydra if contents is another hydra struct, error if it's a value
+       - [DONE] hydra.get("key"): returns Hydra if contents is another hydra struct, error if it's a value
        - hydra.int(): returns int if current Hydra object contains a value, error on
          missing or type conversion
        - hydra.float() etc...
@@ -23,6 +23,11 @@
      - hydra.dir() - get proper output dir
    - pass args override from cmd line (see if I can do this automatically)
      - chuck hydra.ck:foo=2:bar=4
+   - [TODO] proper error handling
+     - [TODO] handle get_*() failure (print to stderr, return null/0/"")
+     - [TODO] check if python is installed
+     - [TODO] check if hydra is installed (print pip message to run otherwise)
+     - [TODO] gracefully handle parse failure
  */
 
 // this should align with the correct versions of these ChucK files
@@ -33,6 +38,7 @@
 #include <stdio.h>
 #include <limits.h>
 #include <iostream>
+#include <variant>
 
 #include "nlohmann/json.hpp"
 using json = nlohmann::json;
@@ -49,7 +55,7 @@ from omegaconf import OmegaConf
 
 # context initialization
 with initialize(version_base=None, config_path=sys.argv[1]):
-    cfg = compose(config_name=sys.argv[2], overrides=['+db=mysql', '+db.user=me'])
+    cfg = compose(config_name=sys.argv[2], overrides=[])
     container = OmegaConf.to_container(cfg, resolve=True)
     print(json.dumps(container))
 )";
@@ -64,6 +70,8 @@ CK_DLL_MFUN(hydra_setParam);
 CK_DLL_MFUN(hydra_getParam);
 
 CK_DLL_MFUN(hydra_init);
+CK_DLL_MFUN(hydra_get);
+CK_DLL_MFUN(hydra_get_str);
 
 // this is a special offset reserved for Chugin internal data
 t_CKINT hydra_data_offset = 0;
@@ -74,11 +82,26 @@ t_CKINT hydra_data_offset = 0;
 // of one recommended approach)
 class Hydra
 {
+private:
+  // The values in a hydra config are either YAML values or a
+  // map of hydra configs. Here configs are recusively defined.
+  using value_type = std::variant
+    <std::map<std::string, Hydra*>,
+     std::string
+     >;
+  value_type value;
+
 public:
   // constructor
-  Hydra( )
+  Hydra()
   {
-    m_param = 0;
+    // initialize empty map
+    std::map<std::string, Hydra*> val;
+    value = val;
+  }
+
+  Hydra(std::string val) {
+    value = val;
   }
 
   // set parameter example
@@ -105,16 +128,63 @@ public:
 
     // TODO add a try catch block here to handle parse error
     auto j = json::parse(result);
-    std::cout << j["db"] << std::endl;
 
+    this->build_tree(j);
+  }
+
+  void build_tree(json j) {
+    std::cout << "dump: " << j.dump() << std::endl;
+    // crashing hereb
+    std::map values = std::get<0>(value);
+    
     for (auto& element : j.items()) {
-      std::cout << element.key() << ", " << element.value() << '\n';
-
-      if (element.value().is_object()) {
-        std::cout << "poop\n";
+      auto val = element.value();
+      auto key = element.key();
+      std::cout << "val: " << val << std::endl;
+      // build out object
+      if (val.is_object()) {
+        // figure this out
+        /*
+          - make a new hydra (default to empty map)
+          - call new_hyra.build_tree
+          - add to map
+          - done
+         */
+        Hydra * elem = new Hydra();
+        elem->build_tree(val);
+        values[key] = elem;
+      } else if (val.is_string()) {
+        std::string str_val = val.template get<std::string>();
+        Hydra * elem = new Hydra(str_val);
+        values[key] = elem;
       }
     }
+
+    value = values;
   }
+
+  void set(std::string key, Hydra* val) {
+    std::map values = std::get<0>(value);
+    values[key] = val;
+    value = values;
+  }
+
+  // Get hydra value to be transformed into a hydra class
+  Hydra* get(std::string key) {
+    std::map values = std::get<0>(value);
+    return values[key];
+  }
+
+  std::string get_string() {
+    std::string val = std::get<std::string>(value);
+    return val;
+  }
+
+  // fetcha string from key. Either return string or raise an
+  // exception.
+  // std::string getString(std::string key) {
+
+  // }
     
 private:
   // instance data
@@ -167,6 +237,11 @@ CK_DLL_QUERY( Hydra )
     QUERY->add_mfun(QUERY, hydra_init, "void", "init");
     QUERY->add_arg(QUERY, "string", "config_path");
     QUERY->add_arg(QUERY, "string", "config_name");
+
+    QUERY->add_mfun(QUERY, hydra_get, "Hydra", "get");
+    QUERY->add_arg(QUERY, "string", "key");
+
+    QUERY->add_mfun(QUERY, hydra_get_str, "string", "get_string");
     
     // this reserves a variable in the ChucK internal class to store 
     // referene to the c++ class we defined above
@@ -232,13 +307,38 @@ CK_DLL_MFUN(hydra_getParam)
 
 CK_DLL_MFUN(hydra_init)
 {
+  // get our c++ class pointer
+  Hydra * h_obj = (Hydra *) OBJ_MEMBER_INT(SELF, hydra_data_offset);
+
+  std::string config_path = GET_NEXT_STRING_SAFE(ARGS);
+  std::string config_name = GET_NEXT_STRING_SAFE(ARGS);
+
+  h_obj->init(config_path, config_name);
+}
+
+
+CK_DLL_MFUN(hydra_get)
+{
     // get our c++ class pointer
     Hydra * h_obj = (Hydra *) OBJ_MEMBER_INT(SELF, hydra_data_offset);
 
-    std::string config_path = GET_NEXT_STRING_SAFE(ARGS);
-    std::string config_name = GET_NEXT_STRING_SAFE(ARGS);
+    std::string key = GET_NEXT_STRING_SAFE(ARGS);
 
-    h_obj->init(config_path, config_name);
-    // // set the return value
-    // RETURN->v_float = h_obj->getParam();
+    Hydra * val = h_obj->get(key);
+
+    // Allocate a Hydra object and return it
+    Chuck_DL_Api::Object obj = API->object->create(API, SHRED, API->object->get_type(API, SHRED, "Hydra"));
+    Chuck_Object * object = (Chuck_Object *) obj;
+    OBJ_MEMBER_INT(object, hydra_data_offset) = (t_CKINT) val;
+
+    RETURN->v_object = object;
+}
+
+CK_DLL_MFUN(hydra_get_str)
+{
+    // get our c++ class pointer
+    Hydra * h_obj = (Hydra *) OBJ_MEMBER_INT(SELF, hydra_data_offset);
+
+    std::string val = h_obj->get_string();
+    RETURN->v_string = (Chuck_String*)API->object->create_string(API, SHRED, val.c_str());
 }

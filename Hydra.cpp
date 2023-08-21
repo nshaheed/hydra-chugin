@@ -45,6 +45,11 @@
      - [TODO] check if python is installed
      - [TODO] check if hydra is installed (print pip message to run otherwise)
      - [TODO] gracefully handle parse failure
+   - [TODO] Documentation
+     - [TODO] Doc strings
+     - [TODO] Examples folder
+     - [TODO] Video tutorial
+     - [TODO] Written tutorial
  */
 
 // this should align with the correct versions of these ChucK files
@@ -83,15 +88,13 @@ CK_DLL_CTOR(hydra_ctor);
 CK_DLL_DTOR(hydra_dtor);
 
 // example of getter/setter
-CK_DLL_MFUN(hydra_setParam);
-CK_DLL_MFUN(hydra_getParam);
-
 CK_DLL_MFUN(hydra_init);
 CK_DLL_MFUN(hydra_get);
 CK_DLL_MFUN(hydra_get_str);
 CK_DLL_MFUN(hydra_get_int);
 CK_DLL_MFUN(hydra_get_float);
 CK_DLL_MFUN(hydra_get_bool);
+CK_DLL_MFUN(hydra_get_array);
 
 CK_DLL_MFUN(hydra_is_null);
 
@@ -164,16 +167,6 @@ public:
   // initialize a null-valued Hydra
   Hydra() {
   }
-
-  // set parameter example
-  t_CKFLOAT setParam( t_CKFLOAT p )
-  {
-    m_param = p;
-    return p;
-  }
-
-  // get parameter example
-  t_CKFLOAT getParam() { return m_param; }
 
   void build_hydra(json j) {
     if (j.is_string()) {
@@ -259,8 +252,6 @@ public:
   // }
     
 private:
-  // instance data
-  t_CKFLOAT m_param;
 
   // execute cmd and return the stdout as a string
   // see the link for how to deal with windows
@@ -296,14 +287,6 @@ CK_DLL_QUERY( Hydra )
     QUERY->add_ctor(QUERY, hydra_ctor);
     // register the destructor (probably no need to change)
     QUERY->add_dtor(QUERY, hydra_dtor);
-
-    // example of adding setter method
-    QUERY->add_mfun(QUERY, hydra_setParam, "float", "param");
-    // example of adding argument to the above method
-    QUERY->add_arg(QUERY, "float", "arg");
-
-    // example of adding getter method
-    QUERY->add_mfun(QUERY, hydra_getParam, "float", "param");
 
     // init method
     QUERY->add_mfun(QUERY, hydra_init, "void", "init");
@@ -353,27 +336,6 @@ CK_DLL_DTOR(hydra_dtor)
         h_obj = NULL;
     }
 }
-
-
-// example implementation for setter
-CK_DLL_MFUN(hydra_setParam)
-{
-  // get our c++ class pointer
-  Hydra * h_obj = (Hydra *) OBJ_MEMBER_INT(SELF, hydra_data_offset);
-  // set the return value
-  RETURN->v_float = h_obj->setParam(GET_NEXT_FLOAT(ARGS));
-}
-
-
-// example implementation for getter
-CK_DLL_MFUN(hydra_getParam)
-{
-    // get our c++ class pointer
-    Hydra * h_obj = (Hydra *) OBJ_MEMBER_INT(SELF, hydra_data_offset);
-    // set the return value
-    RETURN->v_float = h_obj->getParam();
-}
-
 
 CK_DLL_MFUN(hydra_init)
 {
@@ -438,10 +400,20 @@ CK_DLL_MFUN(hydra_get_bool)
     RETURN->v_int = h_obj->get_bool();;
 }
 
+CK_DLL_MFUN(hydra_get_array)
+{
+    // get our c++ class pointer
+    Hydra * h_obj = (Hydra *) OBJ_MEMBER_INT(SELF, hydra_data_offset);
+
+    std::vector<Hydra*> vals = h_obj->get_array();
+
+    // RETURN->v_object = h_obj->get_bool();
+}
+
 CK_DLL_MFUN(hydra_is_null)
 {
     // get our c++ class pointer
     Hydra * h_obj = (Hydra *) OBJ_MEMBER_INT(SELF, hydra_data_offset);
 
-    RETURN->v_int = h_obj->is_null();;
+    RETURN->v_int = h_obj->is_null();
 }

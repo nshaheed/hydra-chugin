@@ -8,7 +8,15 @@ class HydraTest extends Assert {
         testGetInt();
         testBool();
         testGetFloat();
+        // testGetArray(); // Not implemented yet
         testGetNested();
+
+        testIsNull();
+        testIsConfig();
+        testIsString();
+        testIsNumber();
+        testIsBool();
+        testIsArray();
     }
 
     public void testGetStr() {
@@ -46,9 +54,43 @@ class HydraTest extends Assert {
         assertEquals(want, got);
     }
 
-    public void testNull() {
+    public void testIsNull() {
         assertTrue(h.get("test_null").is_null());
-        assertFalse(h.get("test_int").is_null());
+        assertFalse(h.get("test_num").is_null());
+    }
+
+    public void testIsConfig() {
+        assertTrue(h.get("struct").is_config());
+        assertFalse(h.get("test_num").is_config());
+    }
+
+    public void testIsString() {
+        assertTrue(h.get("test_str").is_string());
+        assertFalse(h.get("test_num").is_string());
+    }
+
+    public void testIsNumber() {
+        assertTrue(h.get("test_num").is_number());
+        assertFalse(h.get("test_string").is_number());
+    }
+
+    public void testIsBool() {
+        assertTrue(h.get("test_bool").is_bool());
+        assertFalse(h.get("test_string").is_bool());
+    }
+
+    public void testIsArray() {
+        assertTrue(h.get("test_arr").is_array());
+        assertFalse(h.get("test_string").is_number());
+    }
+
+    public void testGetArray() {
+        h.get("test_arr").get_array() @=> Hydra got[];
+        [1,2,3] @=> int want[];
+
+        for (int i: Std.range(want.size())) {
+            assertEquals(want[i], got[i].get_int());
+        }
     }
 }
 

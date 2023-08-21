@@ -1,8 +1,9 @@
 test_num: 3
 test_float: 3.5
 test_bool: On
-test_str: "poop"
+test_str: poop
 test_null: ~
+test_arr: [1, 2, 3]
 struct:
   val1: 17
   val_str: "pooop"

@@ -13,7 +13,7 @@
      - [DONE] Int
      - [DONE] Float
      - [DONE] Bool
-     - [TODO] (P1) Array
+     - [INPR] (P1) Array
        - only return list of Hydra
      - [TODO] (P1) Dur 
        - parse string as Dur
@@ -23,7 +23,7 @@
      - [TODO] (P2) vec3 
      - [TODO] (P2) vec4 
    - [DONE] is_nil() - now to handle?
-   - [TODO] add is_array/is_string/etc. type checkers
+   - [DONE] add is_array/is_string/etc. type checkers
    - [TODO] set() 
      - take in type, return Hydra
    - [TODO] handle error case: if json conversion fails, print error and return nil
@@ -97,6 +97,11 @@ CK_DLL_MFUN(hydra_get_bool);
 CK_DLL_MFUN(hydra_get_array);
 
 CK_DLL_MFUN(hydra_is_null);
+CK_DLL_MFUN(hydra_is_config);
+CK_DLL_MFUN(hydra_is_str);
+CK_DLL_MFUN(hydra_is_number);
+CK_DLL_MFUN(hydra_is_bool);
+CK_DLL_MFUN(hydra_is_array);
 
 // this is a special offset reserved for Chugin internal data
 t_CKINT hydra_data_offset = 0;
@@ -236,6 +241,10 @@ public:
     return val;
   }
 
+  std::vector<Hydra*> get_array() {
+    return std::get<std::vector<Hydra*>>(value);
+  }
+
   t_CKINT is_null() {
     // check if variant is in monostate
     if(value.index() == 0) {
@@ -245,11 +254,30 @@ public:
     return false;
   }
 
-  // fetcha string from key. Either return string or raise an
-  // exception.
-  // std::string getString(std::string key) {
+  t_CKINT is_config() {
+    if (std::get_if<std::map<std::string, Hydra*>>(&value)) return true;
+    return false;
+  }
 
-  // }
+  t_CKINT is_string() {
+    if (std::get_if<std::string>(&value)) return true;
+    return false;
+  }
+
+  t_CKINT is_number() {
+    if (std::get_if<double>(&value)) return true;
+    return false;
+  }
+
+  t_CKINT is_bool() {
+    if (std::get_if<bool>(&value)) return true;
+    return false;
+  }
+
+  t_CKINT is_array() {
+    if (std::get_if<std::vector<Hydra*>>(&value)) return true;
+    return false;
+  }
     
 private:
 
@@ -300,7 +328,13 @@ CK_DLL_QUERY( Hydra )
     QUERY->add_mfun(QUERY, hydra_get_int, "int", "get_int");
     QUERY->add_mfun(QUERY, hydra_get_float, "float", "get_float");
     QUERY->add_mfun(QUERY, hydra_get_bool, "int", "get_bool");
+    QUERY->add_mfun(QUERY, hydra_get_array, "Hydra[]", "get_array");
     QUERY->add_mfun(QUERY, hydra_is_null, "int", "is_null");
+    QUERY->add_mfun(QUERY, hydra_is_config, "int", "is_config");
+    QUERY->add_mfun(QUERY, hydra_is_str, "int", "is_string");
+    QUERY->add_mfun(QUERY, hydra_is_number, "int", "is_number");
+    QUERY->add_mfun(QUERY, hydra_is_bool, "int", "is_bool");
+    QUERY->add_mfun(QUERY, hydra_is_array, "int", "is_array");
     
     // this reserves a variable in the ChucK internal class to store 
     // referene to the c++ class we defined above
@@ -402,12 +436,34 @@ CK_DLL_MFUN(hydra_get_bool)
 
 CK_DLL_MFUN(hydra_get_array)
 {
-    // get our c++ class pointer
-    Hydra * h_obj = (Hydra *) OBJ_MEMBER_INT(SELF, hydra_data_offset);
+  // NOTE: THIS DOESN't WORK YET
+  // get our c++ class pointer
+  Hydra * h_obj = (Hydra *) OBJ_MEMBER_INT(SELF, hydra_data_offset);
 
-    std::vector<Hydra*> vals = h_obj->get_array();
 
-    // RETURN->v_object = h_obj->get_bool();
+
+  std::vector<Hydra*> vals = h_obj->get_array();
+
+  t_CKINT size = vals.size();
+
+  // allocate array object
+  // Chuck_Array4 * range = new Chuck_Array4(TRUE, size);
+    
+  Chuck_DL_Api::Object obj = API->object->create(API, SHRED, API->object->get_type(API, SHRED, "int[]"));
+  Chuck_Array4 * object = (Chuck_Array4 *) obj;
+  std::vector<t_CKUINT> vec;
+  object->m_vector = vec;
+  std::cout << object->size() << std::endl;
+  // OBJ_MEMBER_INT(object, 
+    
+
+
+
+  // initialize with trappings of Object
+  // initialize_object(range, SHRED->vm_ref->env()->ckt_array);
+    
+
+  // RETURN->v_object = h_obj->get_bool();
 }
 
 CK_DLL_MFUN(hydra_is_null)
@@ -417,3 +473,44 @@ CK_DLL_MFUN(hydra_is_null)
 
     RETURN->v_int = h_obj->is_null();
 }
+
+CK_DLL_MFUN(hydra_is_config)
+{
+    // get our c++ class pointer
+    Hydra * h_obj = (Hydra *) OBJ_MEMBER_INT(SELF, hydra_data_offset);
+
+    RETURN->v_int = h_obj->is_config();
+}
+
+CK_DLL_MFUN(hydra_is_str)
+{
+    // get our c++ class pointer
+    Hydra * h_obj = (Hydra *) OBJ_MEMBER_INT(SELF, hydra_data_offset);
+
+    RETURN->v_int = h_obj->is_string();
+}
+
+CK_DLL_MFUN(hydra_is_number)
+{
+    // get our c++ class pointer
+    Hydra * h_obj = (Hydra *) OBJ_MEMBER_INT(SELF, hydra_data_offset);
+
+    RETURN->v_int = h_obj->is_number();
+}
+
+CK_DLL_MFUN(hydra_is_bool)
+{
+    // get our c++ class pointer
+    Hydra * h_obj = (Hydra *) OBJ_MEMBER_INT(SELF, hydra_data_offset);
+
+    RETURN->v_int = h_obj->is_bool();
+}
+
+CK_DLL_MFUN(hydra_is_array)
+{
+    // get our c++ class pointer
+    Hydra * h_obj = (Hydra *) OBJ_MEMBER_INT(SELF, hydra_data_offset);
+
+    RETURN->v_int = h_obj->is_array();
+}
+

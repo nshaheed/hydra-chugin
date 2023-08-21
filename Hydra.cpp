@@ -22,7 +22,8 @@
      - [TODO] (P2) polar
      - [TODO] (P2) vec3 
      - [TODO] (P2) vec4 
-   - [TODO] is_nil() - now to handle?
+   - [DONE] is_nil() - now to handle?
+   - [TODO] add is_array/is_string/etc. type checkers
    - [TODO] set() 
      - take in type, return Hydra
    - [TODO] handle error case: if json conversion fails, print error and return nil

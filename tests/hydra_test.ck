@@ -31,14 +31,14 @@ class HydraTest extends Assert {
     }
 
     public void testGetStr() {
-        h.get("test_str").get_string() => string got;
+        h.get("test_str").getString() => string got;
         "poop" => string want;
 
         assertEquals(want, got);
     }
 
     public void testGetNested() {
-        h.get("struct").get("val_str").get_string() => string got;
+        h.get("struct").get("val_str").getString() => string got;
         "pooop" => string want;
 
         assertEquals(want, got);
@@ -48,66 +48,66 @@ class HydraTest extends Assert {
         h.get("test_num") @=> Hydra t;
         3 => int want;
 
-        assertEquals(want, t.get_int());
+        assertEquals(want, t.getInt());
     }
 
     public void testGetInt() {
-        h.get("test_num").get_int() => int got;
+        h.get("test_num").getInt() => int got;
         3 => int want;
 
         assertEquals(want, got);
     }
 
     public void testGetFloat() {
-        h.get("test_float").get_float() => float got;
+        h.get("test_float").getFloat() => float got;
         3.5 => float want;
 
         assertEquals(want, got, 0.01);
     }
 
     public void testBool() {
-        h.get("test_bool").get_bool() => int got;
+        h.get("test_bool").getBool() => int got;
         true => int want;
 
         assertEquals(want, got);
     }
 
     public void testIsNull() {
-        assertTrue(h.get("test_null").is_null());
-        assertFalse(h.get("test_num").is_null());
+        assertTrue(h.get("test_null").isNull());
+        assertFalse(h.get("test_num").isNull());
     }
 
     public void testIsConfig() {
-        assertTrue(h.get("struct").is_config());
-        assertFalse(h.get("test_num").is_config());
+        assertTrue(h.get("struct").isConfig());
+        assertFalse(h.get("test_num").isConfig());
     }
 
     public void testIsString() {
-        assertTrue(h.get("test_str").is_string());
-        assertFalse(h.get("test_num").is_string());
+        assertTrue(h.get("test_str").isString());
+        assertFalse(h.get("test_num").isString());
     }
 
     public void testIsNumber() {
-        assertTrue(h.get("test_num").is_number());
-        assertFalse(h.get("test_string").is_number());
+        assertTrue(h.get("test_num").isNumber());
+        assertFalse(h.get("test_string").isNumber());
     }
 
     public void testIsBool() {
-        assertTrue(h.get("test_bool").is_bool());
-        assertFalse(h.get("test_string").is_bool());
+        assertTrue(h.get("test_bool").isBool());
+        assertFalse(h.get("test_string").isBool());
     }
 
     public void testIsArray() {
-        assertTrue(h.get("test_arr").is_array());
-        assertFalse(h.get("test_string").is_number());
+        assertTrue(h.get("test_arr").isArray());
+        assertFalse(h.get("test_string").isNumber());
     }
 
     public void testGetArray() {
-        h.get("test_arr").get_array() @=> Hydra got[];
+        h.get("test_arr").getArray() @=> Hydra got[];
         [1,2,3] @=> int want[];
 
         for (int i: Std.range(want.size())) {
-            assertEquals(want[i], got[i].get_int());
+            assertEquals(want[i], got[i].getInt());
         }
     }
 
@@ -118,7 +118,7 @@ class HydraTest extends Assert {
 
         p.get("test_num").set() @=> Hydra test_null;
 
-        assertTrue(test_null.is_null());
+        assertTrue(test_null.isNull());
     }
 
     public void testSetConfig() {
@@ -130,8 +130,8 @@ class HydraTest extends Assert {
         p.get("struct") @=> Hydra replace;
         p.get("test_num").set(replace) @=> Hydra test_config;
 
-        assertTrue(test_config.is_config());
-        assertEquals(test_config.get("val1").get_int(), p.get("struct").get("val1").get_int());
+        assertTrue(test_config.isConfig());
+        assertEquals(test_config.get("val1").getInt(), p.get("struct").get("val1").getInt());
     }
 
     public void testSetString() {
@@ -144,7 +144,7 @@ class HydraTest extends Assert {
         // replace the number value and substitute in a config
         p.get("test_num").set(want) @=> Hydra replace;
 
-        assertEquals(want, replace.get_string());
+        assertEquals(want, replace.getString());
     }
 
     public void testSetInt() {
@@ -157,7 +157,7 @@ class HydraTest extends Assert {
         // replace the number value and substitute in a config
         p.get("test_str").set(want) @=> Hydra replace;
 
-        assertEquals(want, replace.get_int());
+        assertEquals(want, replace.getInt());
     }
 
     public void testSetFloat() {
@@ -170,7 +170,7 @@ class HydraTest extends Assert {
         // replace the number value and substitute in a config
         p.get("test_str").set(want) @=> Hydra replace;
 
-        assertEquals(want, replace.get_float(),0.0001);
+        assertEquals(want, replace.getFloat(),0.0001);
     }
 
     public void testSetTrue() {
@@ -179,9 +179,9 @@ class HydraTest extends Assert {
         p.init("configs", "config");
 
         // replace the number value and substitute in a config
-        p.get("test_str").set_true() @=> Hydra replace;
+        p.get("test_str").setTrue() @=> Hydra replace;
 
-        assertTrue(replace.get_bool());
+        assertTrue(replace.getBool());
     }
     public void testSetFalse() {
         // stateful changes
@@ -189,9 +189,9 @@ class HydraTest extends Assert {
         p.init("configs", "config");
 
         // replace the number value and substitute in a config
-        p.get("test_str").set_false() @=> Hydra replace;
+        p.get("test_str").setFalse() @=> Hydra replace;
 
-        assertFalse(replace.get_bool());
+        assertFalse(replace.getBool());
     }
 }
 

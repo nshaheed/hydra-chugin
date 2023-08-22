@@ -348,11 +348,11 @@ CK_DLL_QUERY( Hydra )
     QUERY->add_mfun(QUERY, hydra_get, "Hydra", "get");
     QUERY->add_arg(QUERY, "string", "key");
 
-    QUERY->add_mfun(QUERY, hydra_get_str, "string", "get_string");
-    QUERY->add_mfun(QUERY, hydra_get_int, "int", "get_int");
-    QUERY->add_mfun(QUERY, hydra_get_float, "float", "get_float");
-    QUERY->add_mfun(QUERY, hydra_get_bool, "int", "get_bool");
-    QUERY->add_mfun(QUERY, hydra_get_array, "Hydra[]", "get_array");
+    QUERY->add_mfun(QUERY, hydra_get_str, "string", "getString");
+    QUERY->add_mfun(QUERY, hydra_get_int, "int", "getInt");
+    QUERY->add_mfun(QUERY, hydra_get_float, "float", "getFloat");
+    QUERY->add_mfun(QUERY, hydra_get_bool, "int", "getBool");
+    QUERY->add_mfun(QUERY, hydra_get_array, "Hydra[]", "getArray");
 
     // Setters
     QUERY->add_mfun(QUERY, hydra_set_null, "Hydra", "set");
@@ -364,17 +364,17 @@ CK_DLL_QUERY( Hydra )
     QUERY->add_arg(QUERY, "int", "val");
     QUERY->add_mfun(QUERY, hydra_set_float, "Hydra", "set");
     QUERY->add_arg(QUERY, "float", "val");
-    QUERY->add_mfun(QUERY, hydra_set_true, "Hydra", "set_true");
-    QUERY->add_mfun(QUERY, hydra_set_false, "Hydra", "set_false");
+    QUERY->add_mfun(QUERY, hydra_set_true, "Hydra", "setTrue");
+    QUERY->add_mfun(QUERY, hydra_set_false, "Hydra", "setFalse");
     // TODO set array
 
     // Type checkers
-    QUERY->add_mfun(QUERY, hydra_is_null, "int", "is_null");
-    QUERY->add_mfun(QUERY, hydra_is_config, "int", "is_config");
-    QUERY->add_mfun(QUERY, hydra_is_str, "int", "is_string");
-    QUERY->add_mfun(QUERY, hydra_is_number, "int", "is_number");
-    QUERY->add_mfun(QUERY, hydra_is_bool, "int", "is_bool");
-    QUERY->add_mfun(QUERY, hydra_is_array, "int", "is_array");
+    QUERY->add_mfun(QUERY, hydra_is_null, "int", "isNull");
+    QUERY->add_mfun(QUERY, hydra_is_config, "int", "isConfig");
+    QUERY->add_mfun(QUERY, hydra_is_str, "int", "isString");
+    QUERY->add_mfun(QUERY, hydra_is_number, "int", "isNumber");
+    QUERY->add_mfun(QUERY, hydra_is_bool, "int", "isBool");
+    QUERY->add_mfun(QUERY, hydra_is_array, "int", "isArray");
     
     // this reserves a variable in the ChucK internal class to store 
     // referene to the c++ class we defined above

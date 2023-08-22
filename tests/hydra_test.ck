@@ -8,8 +8,17 @@ class HydraTest extends Assert {
         testGetInt();
         testBool();
         testGetFloat();
-        // testGetArray(); // Not implemented yet
         testGetNested();
+        testGetAssign();
+        // testGetArray(); // Not implemented yet
+
+        testSetNull();
+        testSetConfig();
+        testSetString();
+        testSetInt();
+        testSetFloat();
+        testSetTrue();
+        testSetFalse();
 
         testIsNull();
         testIsConfig();
@@ -17,6 +26,8 @@ class HydraTest extends Assert {
         testIsNumber();
         testIsBool();
         testIsArray();
+
+        <<< "success!" >>>;
     }
 
     public void testGetStr() {
@@ -31,6 +42,13 @@ class HydraTest extends Assert {
         "pooop" => string want;
 
         assertEquals(want, got);
+    }
+
+    public void testGetAssign() {
+        h.get("test_num") @=> Hydra t;
+        3 => int want;
+
+        assertEquals(want, t.get_int());
     }
 
     public void testGetInt() {
@@ -91,6 +109,89 @@ class HydraTest extends Assert {
         for (int i: Std.range(want.size())) {
             assertEquals(want[i], got[i].get_int());
         }
+    }
+
+    public void testSetNull() {
+        // stateful changes
+        Hydra p;
+        p.init("configs", "config");
+
+        p.get("test_num").set() @=> Hydra test_null;
+
+        assertTrue(test_null.is_null());
+    }
+
+    public void testSetConfig() {
+        // stateful changes
+        Hydra p;
+        p.init("configs", "config");
+
+        // replace the number value and substitute in a config
+        p.get("struct") @=> Hydra replace;
+        p.get("test_num").set(replace) @=> Hydra test_config;
+
+        assertTrue(test_config.is_config());
+        assertEquals(test_config.get("val1").get_int(), p.get("struct").get("val1").get_int());
+    }
+
+    public void testSetString() {
+        // stateful changes
+        Hydra p;
+        p.init("configs", "config");
+
+        "not a number!" => string want;
+
+        // replace the number value and substitute in a config
+        p.get("test_num").set(want) @=> Hydra replace;
+
+        assertEquals(want, replace.get_string());
+    }
+
+    public void testSetInt() {
+        // stateful changes
+        Hydra p;
+        p.init("configs", "config");
+
+        42 => int want;
+
+        // replace the number value and substitute in a config
+        p.get("test_str").set(want) @=> Hydra replace;
+
+        assertEquals(want, replace.get_int());
+    }
+
+    public void testSetFloat() {
+        // stateful changes
+        Hydra p;
+        p.init("configs", "config");
+
+        42.11111 => float want;
+
+        // replace the number value and substitute in a config
+        p.get("test_str").set(want) @=> Hydra replace;
+
+        assertEquals(want, replace.get_float(),0.0001);
+    }
+
+    public void testSetTrue() {
+        // stateful changes
+        Hydra p;
+        p.init("configs", "config");
+
+        // replace the number value and substitute in a config
+        p.get("test_str").set_true() @=> Hydra replace;
+
+        assertTrue(replace.get_bool());
+    }
+    public void testSetFalse() {
+        // stateful changes
+        Hydra p;
+        p.init("configs", "config");
+
+        // replace the number value and substitute in a config
+        p.get("test_str").set_false() @=> Hydra replace;
+
+        assertFalse(replace.get_bool());
     }
 }
 

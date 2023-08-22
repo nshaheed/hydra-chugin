@@ -24,8 +24,10 @@
      - [TODO] (P2) vec4 
    - [DONE] is_nil() - now to handle?
    - [DONE] add is_array/is_string/etc. type checkers
-   - [TODO] set() 
+   - [INPR] set()
      - take in type, return Hydra
+     - [DONE] set for configs and primitives
+     - [TODO] set for array
    - [TODO] handle error case: if json conversion fails, print error and return nil
    - [TODO] outputs dir
      - make outputs dir (mkdir -p): ./outputs/YYYY-MM-DD/HH-MM-SS/
@@ -33,10 +35,10 @@
    - [TODO] maybe have more structured dict
      - hydra type
        - [DONE] hydra.get("key"): returns Hydra if contents is another hydra struct, error if it's a value
-       - hydra.int(): returns int if current Hydra object contains a value, error on
+       - [DONE] hydra.int(): returns int if current Hydra object contains a value, error on
          missing or type conversion
-       - hydra.float() etc...
-       - ex: hydra.get("foo").get("bar").int() => int a;
+       - [DONE] hydra.float() etc...
+       - [DONE] ex: hydra.get("foo").get("bar").int() => int a;
      - hydra.dir() - get proper output dir
    - pass args override from cmd line (see if I can do this automatically)
      - chuck hydra.ck:foo=2:bar=4
@@ -102,6 +104,15 @@ CK_DLL_MFUN(hydra_is_str);
 CK_DLL_MFUN(hydra_is_number);
 CK_DLL_MFUN(hydra_is_bool);
 CK_DLL_MFUN(hydra_is_array);
+
+CK_DLL_MFUN(hydra_set_null);
+CK_DLL_MFUN(hydra_set_config);
+CK_DLL_MFUN(hydra_set_str);
+CK_DLL_MFUN(hydra_set_int);
+CK_DLL_MFUN(hydra_set_float);
+CK_DLL_MFUN(hydra_set_true);
+CK_DLL_MFUN(hydra_set_false);
+CK_DLL_MFUN(hydra_set_array);
 
 // this is a special offset reserved for Chugin internal data
 t_CKINT hydra_data_offset = 0;
@@ -216,6 +227,14 @@ public:
     std::get<1>(value)[key] = val;
   }
 
+  void set() {
+    value = std::monostate();
+  }
+
+  void set(value_type v) {
+    value = v;
+  }
+
   // Get hydra value to be transformed into a hydra class
   Hydra* get(std::string key) {
     return std::get<1>(value)[key];
@@ -224,6 +243,10 @@ public:
   std::string get_string() {
     std::string val = std::get<std::string>(value);
     return val;
+  }
+
+  value_type get_value() {
+    return value;
   }
 
   t_CKINT get_int() {
@@ -321,6 +344,7 @@ CK_DLL_QUERY( Hydra )
     QUERY->add_arg(QUERY, "string", "config_path");
     QUERY->add_arg(QUERY, "string", "config_name");
 
+    // Getters
     QUERY->add_mfun(QUERY, hydra_get, "Hydra", "get");
     QUERY->add_arg(QUERY, "string", "key");
 
@@ -329,6 +353,22 @@ CK_DLL_QUERY( Hydra )
     QUERY->add_mfun(QUERY, hydra_get_float, "float", "get_float");
     QUERY->add_mfun(QUERY, hydra_get_bool, "int", "get_bool");
     QUERY->add_mfun(QUERY, hydra_get_array, "Hydra[]", "get_array");
+
+    // Setters
+    QUERY->add_mfun(QUERY, hydra_set_null, "Hydra", "set");
+    QUERY->add_mfun(QUERY, hydra_set_config, "Hydra", "set");
+    QUERY->add_arg(QUERY, "Hydra", "val");
+    QUERY->add_mfun(QUERY, hydra_set_str, "Hydra", "set");
+    QUERY->add_arg(QUERY, "string", "val");
+    QUERY->add_mfun(QUERY, hydra_set_int, "Hydra", "set");
+    QUERY->add_arg(QUERY, "int", "val");
+    QUERY->add_mfun(QUERY, hydra_set_float, "Hydra", "set");
+    QUERY->add_arg(QUERY, "float", "val");
+    QUERY->add_mfun(QUERY, hydra_set_true, "Hydra", "set_true");
+    QUERY->add_mfun(QUERY, hydra_set_false, "Hydra", "set_false");
+    // TODO set array
+
+    // Type checkers
     QUERY->add_mfun(QUERY, hydra_is_null, "int", "is_null");
     QUERY->add_mfun(QUERY, hydra_is_config, "int", "is_config");
     QUERY->add_mfun(QUERY, hydra_is_str, "int", "is_string");
@@ -464,6 +504,73 @@ CK_DLL_MFUN(hydra_get_array)
     
 
   // RETURN->v_object = h_obj->get_bool();
+}
+
+CK_DLL_MFUN(hydra_set_null)
+{
+    // get our c++ class pointer
+    Hydra * h_obj = (Hydra *) OBJ_MEMBER_INT(SELF, hydra_data_offset);
+    h_obj->set();
+    RETURN->v_object = SELF;
+}
+
+CK_DLL_MFUN(hydra_set_config)
+{
+    // get our c++ class pointer
+    Hydra * h_obj = (Hydra *) OBJ_MEMBER_INT(SELF, hydra_data_offset);
+
+    Chuck_Object* config = GET_NEXT_OBJECT(ARGS);
+    Hydra * h_config = (Hydra *) OBJ_MEMBER_INT(config, hydra_data_offset);
+    h_obj->set(h_config->get_value());
+    RETURN->v_object = SELF;
+}
+
+CK_DLL_MFUN(hydra_set_str)
+{
+    // get our c++ class pointer
+    Hydra * h_obj = (Hydra *) OBJ_MEMBER_INT(SELF, hydra_data_offset);
+
+    std::string val = GET_NEXT_STRING_SAFE(ARGS);
+    h_obj->set(val);
+    RETURN->v_object = SELF;
+}
+
+CK_DLL_MFUN(hydra_set_int)
+{
+    // get our c++ class pointer
+    Hydra * h_obj = (Hydra *) OBJ_MEMBER_INT(SELF, hydra_data_offset);
+
+    double val = GET_NEXT_INT(ARGS);
+    h_obj->set(val);
+    RETURN->v_object = SELF;
+}
+
+CK_DLL_MFUN(hydra_set_float)
+{
+    // get our c++ class pointer
+    Hydra * h_obj = (Hydra *) OBJ_MEMBER_INT(SELF, hydra_data_offset);
+
+    double val = GET_NEXT_FLOAT(ARGS);
+    h_obj->set(val);
+    RETURN->v_object = SELF;
+}
+
+CK_DLL_MFUN(hydra_set_true)
+{
+    // get our c++ class pointer
+    Hydra * h_obj = (Hydra *) OBJ_MEMBER_INT(SELF, hydra_data_offset);
+
+    h_obj->set(true);
+    RETURN->v_object = SELF;
+}
+
+CK_DLL_MFUN(hydra_set_false)
+{
+    // get our c++ class pointer
+    Hydra * h_obj = (Hydra *) OBJ_MEMBER_INT(SELF, hydra_data_offset);
+
+    h_obj->set(false);
+    RETURN->v_object = SELF;
 }
 
 CK_DLL_MFUN(hydra_is_null)

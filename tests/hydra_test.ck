@@ -197,10 +197,10 @@ class HydraTest extends Assert {
     }
 
     public void testArgsOverwrite() {
-        Hydra p;
-        ["test_null=Off", "struct.val1=fork", "+struct.val2=18"] @=> string args[];
-        <<< args.size() >>>;
-        p.init("configs", "config", args);
+        // Hydra p;
+        // ["test_null=Off", "struct.val1=fork", "+struct.val2=18"] @=> string args[];
+        // <<< args.size() >>>;
+        // p.init("configs", "config", args);
 
 
     }

@@ -27,6 +27,8 @@ class HydraTest extends Assert {
         testIsBool();
         testIsArray();
 
+        testArgsOverwrite();
+
         <<< "success!" >>>;
     }
 
@@ -192,6 +194,15 @@ class HydraTest extends Assert {
         p.get("test_str").setFalse() @=> Hydra replace;
 
         assertFalse(replace.getBool());
+    }
+
+    public void testArgsOverwrite() {
+        Hydra p;
+        ["test_null=Off", "struct.val1=fork", "+struct.val2=18"] @=> string args[];
+        <<< args.size() >>>;
+        p.init("configs", "config", args);
+
+
     }
 }
 

@@ -32,14 +32,14 @@
    - [TODO] outputs dir
      - make outputs dir (mkdir -p): ./outputs/YYYY-MM-DD/HH-MM-SS/
        - alternatively, have hydra make this and pass it as metadata (it already will?)
-   - [TODO] maybe have more structured dict
+   - [DONE] maybe have more structured dict
      - hydra type
        - [DONE] hydra.get("key"): returns Hydra if contents is another hydra struct, error if it's a value
        - [DONE] hydra.int(): returns int if current Hydra object contains a value, error on
          missing or type conversion
        - [DONE] hydra.float() etc...
        - [DONE] ex: hydra.get("foo").get("bar").int() => int a;
-     - hydra.dir() - get proper output dir
+   - [TODO] hydra.dir() - get proper output dir
    - pass args override from cmd line (see if I can do this automatically)
      - chuck hydra.ck:foo=2:bar=4
    - [TODO] proper error handling
@@ -91,6 +91,7 @@ CK_DLL_DTOR(hydra_dtor);
 
 // example of getter/setter
 CK_DLL_MFUN(hydra_init);
+CK_DLL_MFUN(hydra_init_args);
 CK_DLL_MFUN(hydra_get);
 CK_DLL_MFUN(hydra_get_str);
 CK_DLL_MFUN(hydra_get_int);
@@ -344,6 +345,11 @@ CK_DLL_QUERY( Hydra )
     QUERY->add_arg(QUERY, "string", "config_path");
     QUERY->add_arg(QUERY, "string", "config_name");
 
+    // QUERY->add_mfun(QUERY, hydra_init_args, "void", "init");
+    // QUERY->add_arg(QUERY, "string", "config_path");
+    // QUERY->add_arg(QUERY, "string", "config_name");
+    // QUERY->add_arg(QUERY, "string[]", "args");
+
     // Getters
     QUERY->add_mfun(QUERY, hydra_get, "Hydra", "get");
     QUERY->add_arg(QUERY, "string", "key");
@@ -403,13 +409,54 @@ CK_DLL_DTOR(hydra_dtor)
     Hydra * h_obj = (Hydra *) OBJ_MEMBER_INT(SELF, hydra_data_offset);
     // check it
     if( h_obj )
-    {
+      {
         // clean up
         delete h_obj;
         OBJ_MEMBER_INT(SELF, hydra_data_offset) = 0;
         h_obj = NULL;
     }
 }
+
+CK_DLL_MFUN(hydra_init_args)
+{
+  std::string config_path = GET_NEXT_STRING_SAFE(ARGS);
+  std::string config_name = GET_NEXT_STRING_SAFE(ARGS);
+  Chuck_Array4 * args = (Chuck_Array4 *) GET_NEXT_OBJECT(ARGS);
+
+  if(args == NULL) {
+    fprintf( stderr, "Hydra.init(): argument 'args' is null\n" );
+    RETURN->v_object = 0;
+    return;
+  }
+
+  std::vector<std::string> args_vector;
+
+  std::cout << "args vec siez: " << args->m_vector.size() << std::endl;
+
+  t_CKINT size;
+  API->object->array4_size(API, args, size);
+
+  for (int i = 0; i < size; i++) {
+    t_CKUINT v;
+    API->object->array4_get_idx(API, args, i, v);
+    std::cout << v << std::endl;
+    // Chuck_String* arg = (Chuck_String*) args->m_vector[i];
+    // args->get((t_CKUINT)i, (t_CKUINT*)arg);
+
+    // args_vector.push_back(arg->str());
+  }
+
+  for (int i = 0; i < args_vector.size(); i++) {
+    std::cout << args_vector[i] << std::endl;
+  }
+
+  // instantiate our internal c++ class representation
+  Hydra * h_obj = new Hydra(config_path, config_name);
+
+  // store the pointer in the ChucK object member
+  OBJ_MEMBER_INT(SELF, hydra_data_offset) = (t_CKINT) h_obj;
+}
+
 
 CK_DLL_MFUN(hydra_init)
 {

@@ -198,14 +198,14 @@ class HydraTest extends Assert {
 
     public void testArgsOverwrite() {
         Hydra p;
-        ["test_null=Off", "struct.val1=fork", "+struct.val2=18"] @=> string args[];
+        ["test_null=false", "struct.val1=fork", "+struct.val2=18"] @=> string args[];
         <<< args.size() >>>;
         p.init("configs", "config", args);
 
         p.get("test_null") @=> Hydra testNull;
         assertNotNull(testNull);
-        assertTrue(testNull.isString());
-        // assertFalse(testNull.getBool());
+        assertTrue(testNull.isBool());
+        assertFalse(testNull.getBool());
 
         p.get("struct").get("val1") @=> Hydra val1;
         assertNotNull(val1);

@@ -79,7 +79,7 @@ from omegaconf import OmegaConf
 
 # context initialization
 with initialize(version_base=None, config_path=sys.argv[1]):
-    cfg = compose(config_name=sys.argv[2], overrides=[])
+    cfg = compose(config_name=sys.argv[2], overrides=sys.argv[3:])
     container = OmegaConf.to_container(cfg, resolve=True)
     print(json.dumps(container))
 )";
@@ -147,8 +147,31 @@ public:
   // }
 
   Hydra(std::string config_path, std::string config_name) {
+    // Append the python program and the arguments into a string and
+    // make a system call.
     // This is hacky but what are ya gonna do?
     std::string cmd = "python -c \"" + config_init + "\" " + config_path + " " + config_name;
+    std::string result = exec(cmd);
+
+    // TODO add a try catch block here to handle parse error
+    auto j = json::parse(result);
+
+    build_hydra(j);
+  }
+
+  Hydra(std::string config_path, std::string config_name, std::vector<std::string> args) {
+
+    // build the overrides from the args list
+    std::string python_args = "";
+    for (auto arg : args) {
+      python_args.append(" ");
+      python_args.append(arg);
+    }
+
+    // Append the python program and the arguments into a string and
+    // make a system call.
+    // This is hacky as hell, but what are ya gonna do?
+    std::string cmd = "python -c \"" + config_init + "\" " + config_path + " " + config_name + python_args;
     std::string result = exec(cmd);
 
     // TODO add a try catch block here to handle parse error
@@ -345,10 +368,10 @@ CK_DLL_QUERY( Hydra )
     QUERY->add_arg(QUERY, "string", "config_path");
     QUERY->add_arg(QUERY, "string", "config_name");
 
-    // QUERY->add_mfun(QUERY, hydra_init_args, "void", "init");
-    // QUERY->add_arg(QUERY, "string", "config_path");
-    // QUERY->add_arg(QUERY, "string", "config_name");
-    // QUERY->add_arg(QUERY, "string[]", "args");
+    QUERY->add_mfun(QUERY, hydra_init_args, "void", "init");
+    QUERY->add_arg(QUERY, "string", "config_path");
+    QUERY->add_arg(QUERY, "string", "config_name");
+    QUERY->add_arg(QUERY, "string[]", "args");
 
     // Getters
     QUERY->add_mfun(QUERY, hydra_get, "Hydra", "get");
@@ -431,19 +454,19 @@ CK_DLL_MFUN(hydra_init_args)
 
   std::vector<std::string> args_vector;
 
-  std::cout << "args vec siez: " << args->m_vector.size() << std::endl;
-
   t_CKINT size;
   API->object->array4_size(API, args, size);
 
   for (int i = 0; i < size; i++) {
-    t_CKUINT v;
-    API->object->array4_get_idx(API, args, i, v);
-    std::cout << v << std::endl;
+    t_CKUINT arg;
+    API->object->array4_get_idx(API, args, i, arg);
+
     // Chuck_String* arg = (Chuck_String*) args->m_vector[i];
     // args->get((t_CKUINT)i, (t_CKUINT*)arg);
 
-    // args_vector.push_back(arg->str());
+    Chuck_String* arg_str = (Chuck_String*) arg;
+
+    args_vector.push_back(arg_str->str());
   }
 
   for (int i = 0; i < args_vector.size(); i++) {
@@ -451,7 +474,7 @@ CK_DLL_MFUN(hydra_init_args)
   }
 
   // instantiate our internal c++ class representation
-  Hydra * h_obj = new Hydra(config_path, config_name);
+  Hydra * h_obj = new Hydra(config_path, config_name, args_vector);
 
   // store the pointer in the ChucK object member
   OBJ_MEMBER_INT(SELF, hydra_data_offset) = (t_CKINT) h_obj;

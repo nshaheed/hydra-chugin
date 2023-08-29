@@ -274,7 +274,10 @@ public:
 
   // Get hydra value to be transformed into a hydra class
   Hydra* get(std::string key) {
-    return std::get<1>(value)[key];
+    if (std::map<std::string, Hydra*>* val = std::get_if<1>(&value)) {
+      return (*val)[key];
+    }
+    return new Hydra();
   }
 
   std::string get_string() {

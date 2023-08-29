@@ -28,7 +28,6 @@ class HydraTest extends Assert {
         testIsArray();
 
         testArgsOverwrite();
-
         chout <= IO.newline()
               <= "~~~~ Testing errors, expect console output below here ~~~~\n"
               <= IO.newline();
@@ -37,6 +36,7 @@ class HydraTest extends Assert {
         testBadGetInt();
         testBadGetFloat();
         testBadGetBool();
+        testBadGet();
 
         chout <= "success!" <= IO.newline();
     }
@@ -257,6 +257,12 @@ class HydraTest extends Assert {
         int want;
 
         assertEquals(want, got);
+    }
+
+    public void testBadGet() {
+       h.get("test_str").get("test") @=> Hydra got;
+
+       assertTrue(got.isNull());
     }
 }
 

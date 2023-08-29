@@ -29,14 +29,16 @@ class HydraTest extends Assert {
 
         testArgsOverwrite();
 
-        <<< "\n~~~~ Testing errors, expect console output below here ~~~~\n" >>>;
+        chout <= IO.newline()
+              <= "~~~~ Testing errors, expect console output below here ~~~~\n"
+              <= IO.newline();
         testBadYaml();
         testBadGetString();
         testBadGetInt();
         testBadGetFloat();
         testBadGetBool();
 
-        <<< "success!" >>>;
+        chout <= "success!" <= IO.newline();
     }
 
     public void testGetStr() {

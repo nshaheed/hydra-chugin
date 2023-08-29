@@ -283,7 +283,7 @@ public:
       return *val;
     }
 
-    std::cerr << "Unable to read Hydra value as string" << std::endl;
+    std::cerr << "Unable to read Hydra value (" << this->get_type_string(&value) <<") as string" << std::endl;
     return "";
   }
 
@@ -296,7 +296,7 @@ public:
       return (int)*val;
     }
 
-    std::cerr << "Unable to read Hydra value as int" << std::endl;
+    std::cerr << "Unable to read Hydra value (" << this->get_type_string(&value) <<") as int" << std::endl;
     return 0;
   }
 
@@ -305,7 +305,7 @@ public:
       return *val;
     }
 
-    std::cerr << "Unable to read Hydra value as float" << std::endl;
+    std::cerr << "Unable to read Hydra value (" << this->get_type_string(&value) <<") as float" << std::endl;
     return 0;
   }
 
@@ -314,7 +314,7 @@ public:
       return (int)*val;
     }
 
-    std::cerr << "Unable to read Hydra value as bool" << std::endl;
+    std::cerr << "Unable to read Hydra value (" << this->get_type_string(&value) <<") as bool" << std::endl;
     return 0;
   }
 
@@ -323,7 +323,7 @@ public:
       return *val;
     }
 
-    std::cerr << "Unable to read Hydra value as int" << std::endl;
+    std::cerr << "Unable to read Hydra value (" << this->get_type_string(&value) <<") as array" << std::endl;
     return std::vector<Hydra*>();
   }
 
@@ -359,6 +359,30 @@ public:
   t_CKINT is_array() {
     if (std::get_if<std::vector<Hydra*>>(&value)) return true;
     return false;
+  }
+
+  // Get the current type of value (for printing)
+  static std::string get_type_string(value_type* v) {
+    if (v == NULL) {
+      return "null";
+    }
+    switch (v->index()) {
+    case 0:
+      return "null";
+    case 1:
+      return "config";
+    case 2:
+      return "string";
+    case 3:
+      return "number";
+    case 4:
+      return "bool";
+    case 5:
+      return "array";
+    default:
+      std::cerr << "Unable to find type of Hydra value" << std::endl;
+      return "";
+    }
   }
     
 private:

@@ -29,6 +29,8 @@
      - [DONE] set for configs and primitives
      - [TODO] set for array
    - [TODO] handle error case: if json conversion fails, print error and return nil
+   - [TODO] get keys
+     - would prefer this return an array instead.
    - [TODO] outputs dir
      - make outputs dir (mkdir -p): ./outputs/YYYY-MM-DD/HH-MM-SS/
        - alternatively, have hydra make this and pass it as metadata (it already will?)
@@ -43,10 +45,12 @@
    - pass args override from cmd line (see if I can do this automatically)
      - chuck hydra.ck:foo=2:bar=4
    - [TODO] proper error handling
-     - [TODO] handle get_*() failure (print to stderr, return null/0/"")
+     - [INPR] handle get_*() failure (print to stderr, return null/0/"")
+       - [TODO] handle array case once impelmented
+       - [TODO] check what type it actually is and print that.
      - [TODO] check if python is installed
      - [TODO] check if hydra is installed (print pip message to run otherwise)
-     - [TODO] gracefully handle parse failure
+     - [DONE] gracefully handle parse failure
    - [TODO] Documentation
      - [TODO] Doc strings
      - [TODO] Examples folder
@@ -150,11 +154,20 @@ public:
     // Append the python program and the arguments into a string and
     // make a system call.
     // This is hacky but what are ya gonna do?
-    std::string cmd = "python -c \"" + config_init + "\" " + config_path + " " + config_name;
+    std::string cmd = "python -c \"" + config_init + "\" " + config_path + " " + config_name + " 2>nul";
     std::string result = exec(cmd);
 
     // TODO add a try catch block here to handle parse error
-    auto j = json::parse(result);
+    json j;
+    try {
+      j = json::parse(result);
+    } catch (json::parse_error& e) {
+      // output exception information
+      std::cerr << "Unable to parse " << config_name << ".yaml" << std::endl
+                << "\tError message: " << e.what() << std::endl
+                << "\tException id: " << e.id << std::endl;
+      return;
+    }
 
     build_hydra(j);
   }
@@ -341,6 +354,7 @@ private:
     while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
       result += buffer.data();
     }
+
     return result;
   }
 };
@@ -690,4 +704,5 @@ CK_DLL_MFUN(hydra_is_array)
 
     RETURN->v_int = h_obj->is_array();
 }
+
 

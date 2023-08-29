@@ -28,9 +28,10 @@
      - take in type, return Hydra
      - [DONE] set for configs and primitives
      - [TODO] set for array
-   - [TODO] handle error case: if json conversion fails, print error and return nil
+   - [DONE] handle error case: if json conversion fails, print error and return nil
    - [TODO] get keys
      - would prefer this return an array instead.
+   - [TODO] remove key
    - [TODO] outputs dir
      - make outputs dir (mkdir -p): ./outputs/YYYY-MM-DD/HH-MM-SS/
        - alternatively, have hydra make this and pass it as metadata (it already will?)
@@ -44,10 +45,10 @@
    - [TODO] hydra.dir() - get proper output dir
    - pass args override from cmd line (see if I can do this automatically)
      - chuck hydra.ck:foo=2:bar=4
-   - [TODO] proper error handling
+   - [INPR] proper error handling
      - [INPR] handle get_*() failure (print to stderr, return null/0/"")
        - [TODO] handle array case once impelmented
-       - [TODO] check what type it actually is and print that.
+       - [DONE] check what type it actually is and print that.
      - [TODO] check if python is installed
      - [TODO] check if hydra is installed (print pip message to run otherwise)
      - [DONE] gracefully handle parse failure

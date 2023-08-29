@@ -29,6 +29,13 @@ class HydraTest extends Assert {
 
         testArgsOverwrite();
 
+        <<< "\n~~~~ Testing errors, expect console output below here ~~~~\n" >>>;
+        testBadYaml();
+        testBadGetString();
+        testBadGetInt();
+        testBadGetFloat();
+        testBadGetBool();
+
         <<< "success!" >>>;
     }
 
@@ -214,6 +221,40 @@ class HydraTest extends Assert {
         p.get("struct").get("val2") @=> Hydra val2;
         assertNotNull(val2);
         assertEquals(val2.getInt(), 18);
+    }
+
+    public void testBadYaml() {
+        Hydra p;
+        p.init("configs", "bad");
+        assertTrue(p.isNull());
+    }
+
+    public void testBadGetString() {
+        h.get("test_num").getString() => string got;
+        string want;
+
+        assertEquals(want, got);
+    }
+
+    public void testBadGetInt() {
+        h.get("does_not_exist").getInt() => int got;
+        int want;
+
+        assertEquals(want, got);
+    }
+
+    public void testBadGetFloat() {
+        h.get("test_str").getFloat() => float got;
+        float want;
+
+        assertEquals(want, got, 0);
+    }
+
+    public void testBadGetBool() {
+        h.get("test_str").getBool() => int got;
+        int want;
+
+        assertEquals(want, got);
     }
 }
 

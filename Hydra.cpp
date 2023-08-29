@@ -278,8 +278,13 @@ public:
   }
 
   std::string get_string() {
-    std::string val = std::get<std::string>(value);
-    return val;
+
+    if (std::string* val = std::get_if<std::string>(&value)) {
+      return *val;
+    }
+
+    std::cerr << "Unable to read Hydra value as string" << std::endl;
+    return "";
   }
 
   value_type get_value() {
@@ -287,22 +292,39 @@ public:
   }
 
   t_CKINT get_int() {
-    t_CKINT val = (int)std::get<double>(value);
-    return val;
+    if (double* val = std::get_if<double>(&value)) {
+      return (int)*val;
+    }
+
+    std::cerr << "Unable to read Hydra value as int" << std::endl;
+    return 0;
   }
 
   t_CKFLOAT get_float() {
-    t_CKFLOAT val = std::get<double>(value);
-    return val;
+    if (double* val = std::get_if<double>(&value)) {
+      return *val;
+    }
+
+    std::cerr << "Unable to read Hydra value as float" << std::endl;
+    return 0;
   }
 
   t_CKINT get_bool() {
-    t_CKINT val = (int)std::get<bool>(value);
-    return val;
+    if (bool* val = std::get_if<bool>(&value)) {
+      return (int)*val;
+    }
+
+    std::cerr << "Unable to read Hydra value as bool" << std::endl;
+    return 0;
   }
 
   std::vector<Hydra*> get_array() {
-    return std::get<std::vector<Hydra*>>(value);
+    if (std::vector<Hydra*>* val = std::get_if<std::vector<Hydra*>>(&value)) {
+      return *val;
+    }
+
+    std::cerr << "Unable to read Hydra value as int" << std::endl;
+    return std::vector<Hydra*>();
   }
 
   t_CKINT is_null() {

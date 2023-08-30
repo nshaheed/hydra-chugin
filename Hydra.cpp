@@ -72,23 +72,6 @@
 #include "nlohmann/json.hpp"
 using json = nlohmann::json;
 
-// The python program to be run. This is embedded here rather than
-// as a file as it means I don't have to manage where the script is
-// relative to the chugin (which seems tricky to do)
-std::string config_init = R"(
-import json
-import sys
-
-from hydra import compose, initialize
-from omegaconf import OmegaConf
-
-# context initialization
-with initialize(version_base=None, config_path=sys.argv[1]):
-    cfg = compose(config_name=sys.argv[2], overrides=sys.argv[3:])
-    container = OmegaConf.to_container(cfg, resolve=True)
-    print(json.dumps(container))
-)";
-
 // declaration of chugin constructor
 CK_DLL_CTOR(hydra_ctor);
 // declaration of chugin desctructor
@@ -185,7 +168,7 @@ public:
     // Append the python program and the arguments into a string and
     // make a system call.
     // This is hacky as hell, but what are ya gonna do?
-    std::string cmd = "python -c \"" + config_init + "\" " + config_path + " " + config_name + python_args;
+    std::string cmd = "python -c \"" + config_init(config_path, config_name) + "\" " + python_args + " 2>nul";
     std::string result = exec(cmd);
 
     // TODO add a try catch block here to handle parse error
@@ -407,6 +390,31 @@ private:
 
     return result;
   }
+
+  std::string config_init(std::string config_path, std::string config_name) {
+    // The python program to be run. This is embedded here rather than
+    // as a file as it means I don't have to manage where the script is
+    // relative to the chugin (which seems tricky to do)
+    std::string config_init_str = R"(
+import json
+import sys
+
+import hydra
+from omegaconf import OmegaConf
+
+
+@hydra.main(version_base=None, config_path=')" + config_path + R"(', config_name=')" + config_name +R"(')
+def config_init(cfg):
+    container = OmegaConf.to_container(cfg, resolve=True)
+    print(json.dumps(container))
+
+
+config_init()
+
+)";
+
+    return config_init_str;
+  }
 };
 
 
@@ -531,10 +539,6 @@ CK_DLL_MFUN(hydra_init_args)
     Chuck_String* arg_str = (Chuck_String*) arg;
 
     args_vector.push_back(arg_str->str());
-  }
-
-  for (int i = 0; i < args_vector.size(); i++) {
-    std::cout << args_vector[i] << std::endl;
   }
 
   // instantiate our internal c++ class representation

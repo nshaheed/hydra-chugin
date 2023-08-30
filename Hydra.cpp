@@ -32,7 +32,7 @@
    - [TODO] get keys
      - would prefer this return an array instead.
    - [TODO] remove key
-   - [TODO] outputs dir
+   - [DONE] outputs dir
      - make outputs dir (mkdir -p): ./outputs/YYYY-MM-DD/HH-MM-SS/
        - alternatively, have hydra make this and pass it as metadata (it already will?)
    - [DONE] maybe have more structured dict
@@ -72,6 +72,7 @@
 #include <iostream>
 #include <variant>
 #include <sstream>
+#include <filesystem>
 
 // json library
 #include "nlohmann/json.hpp"
@@ -194,6 +195,7 @@ public:
     // get cwd (printed first)
     std::getline(result_stream, cwd);
     // std::cout << "cwd: " << cwd << std::endl;
+    std::filesystem::current_path(cwd);
 
     // TODO add a try catch block here to handle parse error
     json j;
@@ -451,7 +453,7 @@ from omegaconf import OmegaConf
 def config_init(cfg):
     container = OmegaConf.to_container(cfg, resolve=True)
     hydra_cfg = hydra.core.hydra_config.HydraConfig.get()
-    print(hydra_cfg.runtime.output_dir)
+    print(f'{hydra_cfg.runtime.output_dir}/')
     print(json.dumps(container))
 
 

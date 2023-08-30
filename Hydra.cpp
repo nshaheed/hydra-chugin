@@ -197,7 +197,6 @@ public:
     // std::cout << "cwd: " << cwd << std::endl;
     std::filesystem::current_path(cwd);
 
-    // TODO add a try catch block here to handle parse error
     json j;
     try {
       j = json::parse(result_stream);

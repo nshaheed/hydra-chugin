@@ -153,7 +153,7 @@ public:
     //    b. The hydra config as a json file
     // 4. Parse the config as json
     // 5. Build up an internal representation of the config
-      std::cout << "constructor called" << std::endl;
+
     std::string python_code = config_init(config_path, config_name);
 
     // Get the current working directory
@@ -180,8 +180,6 @@ public:
     tmpFile << python_code;
     // Close the temporary file
     tmpFile.close();
-
-  Hydra(std::string config_path, std::string config_name, std::vector<std::string> args) {
 
     // build the overrides from the args list
     std::string python_args = "";

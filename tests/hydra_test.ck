@@ -27,6 +27,8 @@ class HydraTest extends Assert {
         testIsBool();
         testIsArray();
 
+        testDir();
+
         testArgsOverwrite();
         chout <= IO.newline()
               <= "~~~~ Testing errors, expect console output below here ~~~~\n"
@@ -262,6 +264,12 @@ class HydraTest extends Assert {
        h.get("test_str").get("test") @=> Hydra got;
 
        assertTrue(got.isNull());
+    }
+
+    public void testDir() {
+       h.dir() => string cwd;
+
+       assertNotNull(cwd);
     }
 }
 

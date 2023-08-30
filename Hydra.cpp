@@ -43,6 +43,8 @@
        - [DONE] hydra.float() etc...
        - [DONE] ex: hydra.get("foo").get("bar").int() => int a;
    - [TODO] hydra.dir() - get proper output dir
+     - [TODO] test just call chdir within the chugin
+   - [TODO] hydra.disableChangeDir() - disable changing cwd
    - pass args override from cmd line (see if I can do this automatically)
      - chuck hydra.ck:foo=2:bar=4
    - [INPR] proper error handling
@@ -54,6 +56,7 @@
      - [DONE] gracefully handle parse failure
    - [TODO] Documentation
      - [TODO] Doc strings
+     - [TODO] ckdoc
      - [TODO] Examples folder
      - [TODO] Video tutorial
      - [TODO] Written tutorial
@@ -68,7 +71,9 @@
 #include <limits.h>
 #include <iostream>
 #include <variant>
+#include <sstream>
 
+// json library
 #include "nlohmann/json.hpp"
 using json = nlohmann::json;
 
@@ -102,6 +107,8 @@ CK_DLL_MFUN(hydra_set_float);
 CK_DLL_MFUN(hydra_set_true);
 CK_DLL_MFUN(hydra_set_false);
 CK_DLL_MFUN(hydra_set_array);
+
+CK_DLL_MFUN(hydra_dir);
 
 // this is a special offset reserved for Chugin internal data
 t_CKINT hydra_data_offset = 0;
@@ -138,13 +145,23 @@ public:
     // Append the python program and the arguments into a string and
     // make a system call.
     // This is hacky but what are ya gonna do?
-    std::string cmd = "python -c \"" + config_init + "\" " + config_path + " " + config_name + " 2>nul";
+    std::string cmd = "python -c \"" + config_init(config_path, config_name) + "\"" + " 2>nul";
+    // std::cout << cmd << std::endl;
     std::string result = exec(cmd);
+    // std::cout << "result\n";
+    // std::cout << result << std::endl << std::endl;;
+
+    std::istringstream result_stream;
+    result_stream.str(result);
+
+    // get cwd (printed first)
+    std::getline(result_stream, cwd);
+    // std::cout << "cwd: " << cwd << std::endl;
 
     // TODO add a try catch block here to handle parse error
     json j;
     try {
-      j = json::parse(result);
+      j = json::parse(result_stream);
     } catch (json::parse_error& e) {
       // output exception information
       std::cerr << "Unable to parse " << config_name << ".yaml" << std::endl
@@ -171,8 +188,24 @@ public:
     std::string cmd = "python -c \"" + config_init(config_path, config_name) + "\" " + python_args + " 2>nul";
     std::string result = exec(cmd);
 
+    std::istringstream result_stream;
+    result_stream.str(result);
+
+    // get cwd (printed first)
+    std::getline(result_stream, cwd);
+    // std::cout << "cwd: " << cwd << std::endl;
+
     // TODO add a try catch block here to handle parse error
-    auto j = json::parse(result);
+    json j;
+    try {
+      j = json::parse(result_stream);
+    } catch (json::parse_error& e) {
+      // output exception information
+      std::cerr << "Unable to parse " << config_name << ".yaml" << std::endl
+                << "\tError message: " << e.what() << std::endl
+                << "\tException id: " << e.id << std::endl;
+      return;
+    }
 
     build_hydra(j);
   }
@@ -371,8 +404,20 @@ public:
       return "";
     }
   }
+
+  // get the output dir of the app's run.
+  std::string dir() {
+    return cwd;
+  }
+
+  // // disable changing the output dir of the hydra app (not implemented yet)
+  // std::string disableChangeDir() {
+
+  // }
     
 private:
+  // The cwd of the run.
+  std::string cwd;
 
   // execute cmd and return the stdout as a string
   // see the link for how to deal with windows
@@ -402,10 +447,11 @@ import sys
 import hydra
 from omegaconf import OmegaConf
 
-
 @hydra.main(version_base=None, config_path=')" + config_path + R"(', config_name=')" + config_name +R"(')
 def config_init(cfg):
     container = OmegaConf.to_container(cfg, resolve=True)
+    hydra_cfg = hydra.core.hydra_config.HydraConfig.get()
+    print(hydra_cfg.runtime.output_dir)
     print(json.dumps(container))
 
 
@@ -476,6 +522,9 @@ CK_DLL_QUERY( Hydra )
     QUERY->add_mfun(QUERY, hydra_is_number, "int", "isNumber");
     QUERY->add_mfun(QUERY, hydra_is_bool, "int", "isBool");
     QUERY->add_mfun(QUERY, hydra_is_array, "int", "isArray");
+
+    // hydra management functions
+    QUERY->add_mfun(QUERY, hydra_dir, "string", "dir");
     
     // this reserves a variable in the ChucK internal class to store 
     // referene to the c++ class we defined above
@@ -631,7 +680,6 @@ CK_DLL_MFUN(hydra_get_array)
   Chuck_Array4 * object = (Chuck_Array4 *) obj;
   std::vector<t_CKUINT> vec;
   object->m_vector = vec;
-  std::cout << object->size() << std::endl;
   // OBJ_MEMBER_INT(object, 
     
 
@@ -760,3 +808,12 @@ CK_DLL_MFUN(hydra_is_array)
 }
 
 
+CK_DLL_MFUN(hydra_dir)
+{
+    // get our c++ class pointer
+    Hydra * h_obj = (Hydra *) OBJ_MEMBER_INT(SELF, hydra_data_offset);
+
+    std::string cwd = h_obj->dir();
+
+    RETURN->v_string = (Chuck_String*)API->object->create_string(API, SHRED, cwd.c_str());
+}

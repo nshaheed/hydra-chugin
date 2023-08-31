@@ -73,6 +73,16 @@
 #include <variant>
 #include <sstream>
 #include <filesystem>
+#include <fstream>
+#include <chrono>
+#include <random>
+
+#ifdef _WIN32
+#include <Windows.h>
+#include <io.h>
+#endif
+
+namespace fs = std::filesystem;
 
 // json library
 #include "nlohmann/json.hpp"
@@ -135,44 +145,41 @@ private:
 
 public:
   // constructor
-  // Hydra(json j)
-  // {
-  //   // initialize empty map
-  //   std::map<std::string, Hydra*> val;
-  //   value = val;
-  // }
+  Hydra(std::string config_path, std::string config_name, std::vector<std::string> args) {
+    // 1. Generate a python program to initialize all the hydra-y things
+    // 2. Write the program to a temporary file 
+    // 3. Run the python program - outputting:
+    //    a. The path to the output dir
+    //    b. The hydra config as a json file
+    // 4. Parse the config as json
+    // 5. Build up an internal representation of the config
+      std::cout << "constructor called" << std::endl;
+    std::string python_code = config_init(config_path, config_name);
 
-  Hydra(std::string config_path, std::string config_name) {
-    // Append the python program and the arguments into a string and
-    // make a system call.
-    // This is hacky but what are ya gonna do?
-    std::string cmd = "python -c \"" + config_init(config_path, config_name) + "\"" + " 2>nul";
-    // std::cout << cmd << std::endl;
-    std::string result = exec(cmd);
-    // std::cout << "result\n";
-    // std::cout << result << std::endl << std::endl;;
+    // Get the current working directory
+    fs::path currentDir = fs::current_path();
 
-    std::istringstream result_stream;
-    result_stream.str(result);
+    // Generate a unique filename in the current working directory
+    auto now = std::chrono::system_clock::now();
+    auto timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
+    std::random_device rd;
+    std::mt19937 generator(rd());
+    std::uniform_int_distribution<int> distribution(0, 9999);
+    int random_number = distribution(generator);
 
-    // get cwd (printed first)
-    std::getline(result_stream, cwd);
-    // std::cout << "cwd: " << cwd << std::endl;
+    std::string tempFileName = "tempfile_" + std::to_string(timestamp) + "_" + std::to_string(random_number) + ".tmp";
 
-    // TODO add a try catch block here to handle parse error
-    json j;
-    try {
-      j = json::parse(result_stream);
-    } catch (json::parse_error& e) {
-      // output exception information
-      std::cerr << "Unable to parse " << config_name << ".yaml" << std::endl
-                << "\tError message: " << e.what() << std::endl
-                << "\tException id: " << e.id << std::endl;
-      return;
+    // Create and open the temporary file
+    std::ofstream tmpFile(tempFileName);
+
+    if (!tmpFile.is_open()) {
+        throw std::runtime_error("Failed to create temporary file.");
     }
 
-    build_hydra(j);
-  }
+    // Write the Python code to the temporary file
+    tmpFile << python_code;
+    // Close the temporary file
+    tmpFile.close();
 
   Hydra(std::string config_path, std::string config_name, std::vector<std::string> args) {
 
@@ -182,20 +189,23 @@ public:
       python_args.append(" ");
       python_args.append(arg);
     }
-
-    // Append the python program and the arguments into a string and
-    // make a system call.
-    // This is hacky as hell, but what are ya gonna do?
-    std::string cmd = "python -c \"" + config_init(config_path, config_name) + "\" " + python_args + " 2>nul";
+    // Execute the python program
+    std::string cmd = "python " + tempFileName + python_args;
     std::string result = exec(cmd);
+
+    // Delete the temporary file
+    if (!fs::remove(tempFileName)) {
+        throw std::runtime_error("Failed to delete temporary file.");
+    }
+
+    //std::cout << "result\n";
+    //std::cout << result << std::endl << std::endl;;
 
     std::istringstream result_stream;
     result_stream.str(result);
 
     // get cwd (printed first)
     std::getline(result_stream, cwd);
-    // std::cout << "cwd: " << cwd << std::endl;
-    std::filesystem::current_path(cwd);
 
     json j;
     try {
@@ -426,7 +436,11 @@ private:
   std::string exec(std::string cmd) {
     std::array<char, 128> buffer;
     std::string result;
+#ifdef _WIN32
+    std::unique_ptr<FILE, decltype(&_pclose)> pipe(_popen(cmd.c_str(), "r"), _pclose);
+#else
     std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd.c_str(), "r"), pclose);
+#endif
     if (!pipe) {
       throw std::runtime_error("popen() failed!");
     }
@@ -605,7 +619,7 @@ CK_DLL_MFUN(hydra_init)
   std::string config_name = GET_NEXT_STRING_SAFE(ARGS);
 
   // instantiate our internal c++ class representation
-  Hydra * h_obj = new Hydra(config_path, config_name);
+  Hydra * h_obj = new Hydra(config_path, config_name, std::vector<std::string>());
 
   // store the pointer in the ChucK object member
   OBJ_MEMBER_INT(SELF, hydra_data_offset) = (t_CKINT) h_obj;

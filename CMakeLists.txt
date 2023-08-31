@@ -34,13 +34,24 @@ set_target_properties(hydra PROPERTIES SUFFIX "")
 
 target_compile_features(hydra PRIVATE cxx_std_17)
 
-target_compile_definitions(hydra
-  PUBLIC
-  # USE_BUILTIN_FFT
-  __PLATFORM_LINUX__
-  USE_PTHREADS
-  )
 
+IF (WIN32)
+    target_compile_definitions(hydra
+      PUBLIC
+      # USE_BUILTIN_FFT
+      __PLATFORM_WINDOWS__
+      # USE_PTHREADS
+      )
+ELSEIF(UNIX)
+    target_compile_definitions(hydra
+      PUBLIC
+      # USE_BUILTIN_FFT
+      __PLATFORM_LINUX__
+      USE_PTHREADS
+    ) 
+ENDIF()
+
+  
 target_link_libraries(hydra PRIVATE Python::Python)
 
 include_directories(${Python_INCLUDE_DIRS})
@@ -63,11 +74,23 @@ INSTALL(
   # RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
   )
 
-add_custom_command(TARGET ${PROJECT_NAME}
-  POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy_if_different
-  "$<TARGET_FILE:hydra>"
-  "~/.chuck/lib/Hydra.chug")
+IF (WIN32)
+    message(POOP="%USERPROFILE%/Documents/chuck/chugins")
+    add_custom_command(TARGET ${PROJECT_NAME}
+      POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different
+      "$<TARGET_FILE:hydra>"
+      # "~/Documents/chuck/chugins"
+      "%USERPROFILE%/Documents/chuck/chugins"
+      )
+
+ELSE()
+    add_custom_command(TARGET ${PROJECT_NAME}
+      POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different
+      "$<TARGET_FILE:hydra>"
+      "~/.chuck/lib/Hydra.chug")
+ENDIF()
 
 # rename to .chug file
 add_custom_command(TARGET ${PROJECT_NAME}

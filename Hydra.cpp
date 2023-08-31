@@ -188,10 +188,10 @@ public:
       python_args.append(arg);
     }
     // Execute the python program
-    std::string cmd = "python " + tempFileName + python_args;
+    std::string cmd = "python " + tempFileName + python_args + " 2>nul";
     std::string result = exec(cmd);
 
-    // Delete the temporary file
+    // Delete the temporary file 
     if (!fs::remove(tempFileName)) {
         throw std::runtime_error("Failed to delete temporary file.");
     }

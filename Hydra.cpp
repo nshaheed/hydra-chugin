@@ -98,9 +98,13 @@ CK_DLL_MFUN(hydra_init);
 CK_DLL_MFUN(hydra_init_args);
 CK_DLL_MFUN(hydra_get);
 CK_DLL_MFUN(hydra_get_str);
+CK_DLL_MFUN(hydra_get_str_key);
 CK_DLL_MFUN(hydra_get_int);
+CK_DLL_MFUN(hydra_get_int_key);
 CK_DLL_MFUN(hydra_get_float);
+CK_DLL_MFUN(hydra_get_float_key);
 CK_DLL_MFUN(hydra_get_bool);
+CK_DLL_MFUN(hydra_get_bool_key);
 CK_DLL_MFUN(hydra_get_array);
 
 CK_DLL_MFUN(hydra_is_null);
@@ -316,6 +320,14 @@ public:
     return "";
   }
 
+  std::string get_string(std::string key) {
+
+      if (Hydra* v = this->get(key)) {
+          return v->get_string();
+      }
+      return "";
+  }
+
   value_type get_value() {
     return value;
   }
@@ -329,6 +341,14 @@ public:
     return 0;
   }
 
+  t_CKINT get_int(std::string key) {
+      if (Hydra* v = this->get(key)) {
+          return v->get_int();
+      }
+      return 0;
+  }
+
+
   t_CKFLOAT get_float() {
     if (double* val = std::get_if<double>(&value)) {
       return *val;
@@ -336,6 +356,13 @@ public:
 
     std::cerr << "Unable to read Hydra value (" << this->get_type_string(&value) <<") as float" << std::endl;
     return 0;
+  }
+
+  t_CKFLOAT get_float(std::string key) {
+      if (Hydra* v = this->get(key)) {
+          return v->get_float();
+      }
+      return 0;
   }
 
   t_CKINT get_bool() {
@@ -346,6 +373,14 @@ public:
     std::cerr << "Unable to read Hydra value (" << this->get_type_string(&value) <<") as bool" << std::endl;
     return 0;
   }
+
+  t_CKINT get_bool(std::string key) {
+      if (Hydra* v = this->get(key)) {
+          return v->get_bool();
+      }
+      return 0;
+  }
+
 
   std::vector<Hydra*> get_array() {
     if (std::vector<Hydra*>* val = std::get_if<std::vector<Hydra*>>(&value)) {
@@ -509,9 +544,21 @@ CK_DLL_QUERY( Hydra )
     QUERY->add_arg(QUERY, "string", "key");
 
     QUERY->add_mfun(QUERY, hydra_get_str, "string", "getString");
+    QUERY->add_mfun(QUERY, hydra_get_str_key, "string", "getString");
+    QUERY->add_arg(QUERY, "string", "key");
+
     QUERY->add_mfun(QUERY, hydra_get_int, "int", "getInt");
+    QUERY->add_mfun(QUERY, hydra_get_int_key, "int", "getInt");
+    QUERY->add_arg(QUERY, "string", "key");
+
     QUERY->add_mfun(QUERY, hydra_get_float, "float", "getFloat");
+    QUERY->add_mfun(QUERY, hydra_get_float_key, "float", "getFloat");
+    QUERY->add_arg(QUERY, "string", "key");
+
     QUERY->add_mfun(QUERY, hydra_get_bool, "int", "getBool");
+    QUERY->add_mfun(QUERY, hydra_get_bool_key, "int", "getBool");
+    QUERY->add_arg(QUERY, "string", "key");
+
     QUERY->add_mfun(QUERY, hydra_get_array, "Hydra[]", "getArray");
 
     // Setters
@@ -650,6 +697,17 @@ CK_DLL_MFUN(hydra_get_str)
     RETURN->v_string = (Chuck_String*)API->object->create_string(API, SHRED, val.c_str());
 }
 
+CK_DLL_MFUN(hydra_get_str_key)
+{
+    // get our c++ class pointer
+    Hydra* h_obj = (Hydra*)OBJ_MEMBER_INT(SELF, hydra_data_offset);
+
+    std::string key = GET_NEXT_STRING_SAFE(ARGS);
+
+    std::string val = h_obj->get_string(key);
+    RETURN->v_string = (Chuck_String*)API->object->create_string(API, SHRED, val.c_str());
+}
+
 CK_DLL_MFUN(hydra_get_int)
 {
     // get our c++ class pointer
@@ -657,6 +715,17 @@ CK_DLL_MFUN(hydra_get_int)
 
     RETURN->v_int = h_obj->get_int();;
 }
+
+CK_DLL_MFUN(hydra_get_int_key)
+{
+    // get our c++ class pointer
+    Hydra* h_obj = (Hydra*)OBJ_MEMBER_INT(SELF, hydra_data_offset);
+
+    std::string key = GET_NEXT_STRING_SAFE(ARGS);
+
+    RETURN->v_int = h_obj->get_int(key);;
+}
+
 
 CK_DLL_MFUN(hydra_get_float)
 {
@@ -666,12 +735,33 @@ CK_DLL_MFUN(hydra_get_float)
     RETURN->v_float = h_obj->get_float();;
 }
 
+CK_DLL_MFUN(hydra_get_float_key)
+{
+    // get our c++ class pointer
+    Hydra* h_obj = (Hydra*)OBJ_MEMBER_INT(SELF, hydra_data_offset);
+
+    std::string key = GET_NEXT_STRING_SAFE(ARGS);
+
+    RETURN->v_float = h_obj->get_float(key);;
+}
+
+
 CK_DLL_MFUN(hydra_get_bool)
 {
     // get our c++ class pointer
     Hydra * h_obj = (Hydra *) OBJ_MEMBER_INT(SELF, hydra_data_offset);
 
     RETURN->v_int = h_obj->get_bool();;
+}
+
+CK_DLL_MFUN(hydra_get_bool_key)
+{
+    // get our c++ class pointer
+    Hydra* h_obj = (Hydra*)OBJ_MEMBER_INT(SELF, hydra_data_offset);
+
+    std::string key = GET_NEXT_STRING_SAFE(ARGS);
+
+    RETURN->v_int = h_obj->get_bool(key);;
 }
 
 CK_DLL_MFUN(hydra_get_array)

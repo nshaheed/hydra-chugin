@@ -39,7 +39,7 @@ class HydraTest extends Assert {
         testBadGetFloat();
         testBadGetBool();
         testBadGet();
-
+        
         chout <= "success!" <= IO.newline();
     }
 
@@ -47,6 +47,9 @@ class HydraTest extends Assert {
         h.get("test_str").getString() => string got;
         "poop" => string want;
 
+        assertEquals(want, got);
+
+        h.getString("test_str")=> got;
         assertEquals(want, got);
     }
 
@@ -69,6 +72,9 @@ class HydraTest extends Assert {
         3 => int want;
 
         assertEquals(want, got);
+
+        h.getInt("test_num") => got;
+        assertEquals(want, got);
     }
 
     public void testGetFloat() {
@@ -76,12 +82,18 @@ class HydraTest extends Assert {
         3.5 => float want;
 
         assertEquals(want, got, 0.01);
+
+        h.getFloat("test_float") => got;
+        assertEquals(want, got, 0.01);
     }
 
     public void testGetBool() {
         h.get("test_bool").getBool() => int got;
         true => int want;
 
+        assertEquals(want, got);
+
+        h.getBool("test_bool") => got;
         assertEquals(want, got);
     }
 
@@ -211,7 +223,7 @@ class HydraTest extends Assert {
         Hydra p;
         ["test_null=false", "struct.val1=fork", "+struct.val2=18"] @=> string args[];
         p.init("configs", "config", args);
-
+        
         p.get("test_null") @=> Hydra testNull;
         assertNotNull(testNull);
         assertTrue(testNull.isBool());

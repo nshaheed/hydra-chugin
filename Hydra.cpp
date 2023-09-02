@@ -348,7 +348,6 @@ public:
       return 0;
   }
 
-
   t_CKFLOAT get_float() {
     if (double* val = std::get_if<double>(&value)) {
       return *val;
@@ -451,7 +450,8 @@ public:
 
   // get the output dir of the app's run.
   std::string dir() {
-    return cwd;
+    fs::path p(cwd);
+    return p.generic_string();
   }
 
   // // disable changing the output dir of the hydra app (not implemented yet)

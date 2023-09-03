@@ -200,8 +200,8 @@ public:
         throw std::runtime_error("Failed to delete temporary file.");
     }
 
-    //std::cout << "result\n";
-    //std::cout << result << std::endl << std::endl;;
+    // std::cout << "result\n";
+    // std::cout << result << std::endl << std::endl;
 
     std::istringstream result_stream;
     result_stream.str(result);
@@ -522,7 +522,7 @@ CK_DLL_QUERY( Hydra )
     
     // begin the class definition
     // can change the second argument to extend a different ChucK class
-    QUERY->begin_class(QUERY, "Hydra", "UGen");
+    QUERY->begin_class(QUERY, "Hydra", "Object");
 
     // register the constructor (probably no need to change)
     QUERY->add_ctor(QUERY, hydra_ctor);

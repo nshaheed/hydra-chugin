@@ -123,6 +123,10 @@ CK_DLL_MFUN(hydra_set_true);
 CK_DLL_MFUN(hydra_set_false);
 CK_DLL_MFUN(hydra_set_array);
 
+// debugs
+CK_DLL_MFUN(hydra_get_debug);
+CK_DLL_MFUN(hydra_set_debug);
+
 CK_DLL_MFUN(hydra_dir);
 
 // this is a special offset reserved for Chugin internal data
@@ -148,6 +152,9 @@ private:
   value_type value;
 
 public:
+  
+  // debug mode???
+  static bool debug;
   // constructor
   Hydra(std::string config_path, std::string config_name, std::vector<std::string> args) {
     // 1. Generate a python program to initialize all the hydra-y things
@@ -192,8 +199,18 @@ public:
       python_args.append(arg);
     }
     // Execute the python program
-    std::string cmd = "python " + tempFileName + python_args + " 2>nul";
+    std::string cmd = "python " + tempFileName + python_args;
+    if (debug) {
+        std::cout << "Python command: " << cmd << std::endl;
+    }
+    else {
+        cmd += " 2>nul";
+    }
     std::string result = exec(cmd);
+    if (debug) {
+        std::cout << "Result:" << std::endl;
+        std::cout << result << std::endl;
+    }
 
     // Delete the temporary file 
     if (!fs::remove(tempFileName)) {
@@ -511,6 +528,7 @@ config_init()
   }
 };
 
+bool Hydra::debug = false;
 
 // query function: chuck calls this when loading the Chugin
 // NOTE: developer will need to modify this function to
@@ -582,6 +600,11 @@ CK_DLL_QUERY( Hydra )
     QUERY->add_mfun(QUERY, hydra_is_number, "int", "isNumber");
     QUERY->add_mfun(QUERY, hydra_is_bool, "int", "isBool");
     QUERY->add_mfun(QUERY, hydra_is_array, "int", "isArray");
+
+    // Debugging tools
+    QUERY->add_mfun(QUERY, hydra_get_debug, "int", "debug");
+    QUERY->add_mfun(QUERY, hydra_set_debug, "int", "debug");
+    QUERY->add_arg(QUERY, "int", "val");
 
     // hydra management functions
     QUERY->add_mfun(QUERY, hydra_dir, "string", "dir");
@@ -919,4 +942,17 @@ CK_DLL_MFUN(hydra_dir)
     std::string cwd = h_obj->dir();
 
     RETURN->v_string = (Chuck_String*)API->object->create_string(API, SHRED, cwd.c_str());
+}
+
+CK_DLL_MFUN(hydra_get_debug)
+{
+    RETURN->v_int = Hydra::debug;
+}
+
+CK_DLL_MFUN(hydra_set_debug)
+{
+    int val = GET_NEXT_INT(ARGS);
+    Hydra::debug = val;
+
+    RETURN->v_int = Hydra::debug;
 }

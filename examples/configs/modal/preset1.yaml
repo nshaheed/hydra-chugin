@@ -1,0 +1,6 @@
+# Our first preset for ModalBar.
+# We have several different variables 
+# being set here.
+preset: 6
+hardness: 127
+position: 127

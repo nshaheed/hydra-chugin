@@ -1,0 +1,8 @@
+# basic.yaml
+# A basic config
+gain: 0.8
+
+# a value with sub-components
+blit:
+    freq: 440
+    harmonics: 4

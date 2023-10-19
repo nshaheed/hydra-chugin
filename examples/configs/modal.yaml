@@ -1,0 +1,8 @@
+# Our top level config with defaults
+defaults:
+  - modal: preset1
+  - _self_
+
+
+tempo: 120
+blit: False

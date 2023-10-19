@@ -627,7 +627,7 @@ CK_DLL_MFUN(hydra_init_args)
 {
   std::string config_path = GET_NEXT_STRING_SAFE(ARGS);
   std::string config_name = GET_NEXT_STRING_SAFE(ARGS);
-  Chuck_Array4 * args = (Chuck_Array4 *) GET_NEXT_OBJECT(ARGS);
+  Chuck_ArrayInt * args = (Chuck_ArrayInt *) GET_NEXT_OBJECT(ARGS);
 
   if(args == NULL) {
     fprintf( stderr, "Hydra.init(): argument 'args' is null\n" );
@@ -638,11 +638,11 @@ CK_DLL_MFUN(hydra_init_args)
   std::vector<std::string> args_vector;
 
   t_CKINT size;
-  API->object->array4_size(API, args, size);
+  API->object->array_int_size(args, size);
 
   for (int i = 0; i < size; i++) {
     t_CKUINT arg;
-    API->object->array4_get_idx(API, args, i, arg);
+    API->object->array_int_get_idx(args, i, arg);
 
     // Chuck_String* arg = (Chuck_String*) args->m_vector[i];
     // args->get((t_CKUINT)i, (t_CKUINT*)arg);
@@ -683,7 +683,9 @@ CK_DLL_MFUN(hydra_get)
     Hydra * val = h_obj->get(key);
 
     // Allocate a Hydra object and return it
-    Chuck_DL_Api::Object obj = API->object->create(API, SHRED, API->object->get_type(API, SHRED, "Hydra"));
+    Chuck_DL_Api::Object obj = API->object->create(SHRED,
+                                                   API->type->lookup(VM, "Hydra"),
+                                                   false);
     Chuck_Object * object = (Chuck_Object *) obj;
     OBJ_MEMBER_INT(object, hydra_data_offset) = (t_CKINT) val;
 
@@ -696,7 +698,7 @@ CK_DLL_MFUN(hydra_get_str)
     Hydra * h_obj = (Hydra *) OBJ_MEMBER_INT(SELF, hydra_data_offset);
 
     std::string val = h_obj->get_string();
-    RETURN->v_string = (Chuck_String*)API->object->create_string(API, SHRED, val.c_str());
+    RETURN->v_string = (Chuck_String*)API->object->create_string(VM, val.c_str(), false);
 }
 
 CK_DLL_MFUN(hydra_get_str_key)
@@ -707,7 +709,7 @@ CK_DLL_MFUN(hydra_get_str_key)
     std::string key = GET_NEXT_STRING_SAFE(ARGS);
 
     std::string val = h_obj->get_string(key);
-    RETURN->v_string = (Chuck_String*)API->object->create_string(API, SHRED, val.c_str());
+    RETURN->v_string = (Chuck_String*)API->object->create_string(VM, val.c_str(), false);
 }
 
 CK_DLL_MFUN(hydra_get_int)
@@ -779,10 +781,10 @@ CK_DLL_MFUN(hydra_get_array)
   t_CKINT size = vals.size();
 
   // allocate array object
-  // Chuck_Array4 * range = new Chuck_Array4(TRUE, size);
+  // Chuck_ArrayInt * range = new Chuck_ArrayInt(TRUE, size);
     
-  Chuck_DL_Api::Object obj = API->object->create(API, SHRED, API->object->get_type(API, SHRED, "int[]"));
-  Chuck_Array4 * object = (Chuck_Array4 *) obj;
+  Chuck_DL_Api::Object obj = API->object->create(SHRED, API->type->lookup(VM, "int[]"), false);
+  Chuck_ArrayInt * object = (Chuck_ArrayInt *) obj;
   std::vector<t_CKUINT> vec;
   object->m_vector = vec;
   // OBJ_MEMBER_INT(object, 
@@ -920,5 +922,5 @@ CK_DLL_MFUN(hydra_dir)
 
     std::string cwd = h_obj->dir();
 
-    RETURN->v_string = (Chuck_String*)API->object->create_string(API, SHRED, cwd.c_str());
+    RETURN->v_string = (Chuck_String*)API->object->create_string(VM, cwd.c_str(), false);
 }

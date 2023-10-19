@@ -54,6 +54,8 @@
      - [TODO] check if python is installed
      - [TODO] check if hydra is installed (print pip message to run otherwise)
      - [DONE] gracefully handle parse failure
+   - [TODO] add is[Null|Bool|etc]("parameter") function to make type checking easier
+   - [TODO} cfg.get("noise").isNull() -> this crashes
    - [TODO] Documentation
      - [TODO] Doc strings
      - [TODO] ckdoc

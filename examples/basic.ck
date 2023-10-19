@@ -6,6 +6,8 @@ Hydra cfg;
 // Initialize cfg with our config.yaml
 // First arg: the directory where the config is stored
 // Second arg: the config file name (don't include .yaml)
+true => cfg.debug;
+// cfg.help();
 cfg.init("configs", "basic");
 
 // Grab the gain value

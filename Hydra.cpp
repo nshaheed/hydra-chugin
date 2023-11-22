@@ -15,13 +15,13 @@
      - [DONE] Bool
      - [INPR] (P1) Array
        - only return list of Hydra
-     - [TODO] (P1) Dur 
+     - [TODO] (P1) Dur
        - parse string as Dur
-     - [TODO] (P2) time 
+     - [TODO] (P2) time
      - [TODO] (P2) complex
      - [TODO] (P2) polar
-     - [TODO] (P2) vec3 
-     - [TODO] (P2) vec4 
+     - [TODO] (P2) vec3
+     - [TODO] (P2) vec4
    - [DONE] is_nil() - now to handle?
    - [DONE] add is_array/is_string/etc. type checkers
    - [INPR] set()
@@ -92,6 +92,10 @@ using json = nlohmann::json;
 
 // declaration of chugin constructor
 CK_DLL_CTOR(hydra_ctor);
+CK_DLL_CTOR(hydra_ctor_init);
+CK_DLL_CTOR(hydra_ctor_init_debug);
+CK_DLL_CTOR(hydra_ctor_args);
+CK_DLL_CTOR(hydra_ctor_args_debug);
 // declaration of chugin desctructor
 CK_DLL_DTOR(hydra_dtor);
 
@@ -154,13 +158,13 @@ private:
   value_type value;
 
 public:
-  
+
   // debug mode???
   static bool debug;
   // constructor
   Hydra(std::string config_path, std::string config_name, std::vector<std::string> args) {
     // 1. Generate a python program to initialize all the hydra-y things
-    // 2. Write the program to a temporary file 
+    // 2. Write the program to a temporary file
     // 3. Run the python program - outputting:
     //    a. The path to the output dir
     //    b. The hydra config as a json file
@@ -214,7 +218,7 @@ public:
         std::cout << result << std::endl;
     }
 
-    // Delete the temporary file 
+    // Delete the temporary file
     if (!fs::remove(tempFileName)) {
         throw std::runtime_error("Failed to delete temporary file.");
     }
@@ -276,6 +280,7 @@ public:
       value = str_val;
     } else if (j.is_number()) {
       double num_val = j.template get<double>();
+      std::cout << "val " << num_val << std::endl;
       value = num_val;
     } else if (j.is_boolean()) {
       bool bool_val = j.template get<bool>();
@@ -289,6 +294,8 @@ public:
       for (auto& element : j.items()) {
         auto val = element.value();
         auto key = element.key();
+
+        std::cout << "key " << key << std::endl;
 
         Hydra * elem = new Hydra(val);
         vals[key] = elem;
@@ -477,7 +484,7 @@ public:
   // std::string disableChangeDir() {
 
   // }
-    
+
 private:
   // The cwd of the run.
   std::string cwd;
@@ -539,13 +546,34 @@ CK_DLL_QUERY( Hydra )
 {
     // hmm, don't change this...
     QUERY->setname(QUERY, "Hydra");
-    
+
     // begin the class definition
     // can change the second argument to extend a different ChucK class
     QUERY->begin_class(QUERY, "Hydra", "Object");
 
     // register the constructor (probably no need to change)
     QUERY->add_ctor(QUERY, hydra_ctor);
+
+    QUERY->add_ctor(QUERY, hydra_ctor_init);
+    QUERY->add_arg(QUERY, "string", "config_path");
+    QUERY->add_arg(QUERY, "string", "config_name");
+
+    QUERY->add_ctor(QUERY, hydra_ctor_init_debug);
+    QUERY->add_arg(QUERY, "string", "config_path");
+    QUERY->add_arg(QUERY, "string", "config_name");
+    QUERY->add_arg(QUERY, "int", "debug");
+
+    QUERY->add_ctor(QUERY, hydra_ctor_args);
+    QUERY->add_arg(QUERY, "string", "config_path");
+    QUERY->add_arg(QUERY, "string", "config_name");
+    QUERY->add_arg(QUERY, "string[]", "args");
+
+    QUERY->add_ctor(QUERY, hydra_ctor_args_debug);
+    QUERY->add_arg(QUERY, "string", "config_path");
+    QUERY->add_arg(QUERY, "string", "config_name");
+    QUERY->add_arg(QUERY, "string[]", "args");
+    QUERY->add_arg(QUERY, "int", "debug");
+
     // register the destructor (probably no need to change)
     QUERY->add_dtor(QUERY, hydra_dtor);
 
@@ -610,8 +638,8 @@ CK_DLL_QUERY( Hydra )
 
     // hydra management functions
     QUERY->add_mfun(QUERY, hydra_dir, "string", "dir");
-    
-    // this reserves a variable in the ChucK internal class to store 
+
+    // this reserves a variable in the ChucK internal class to store
     // referene to the c++ class we defined above
     hydra_data_offset = QUERY->add_mvar(QUERY, "int", "@h_data", false);
 
@@ -630,6 +658,37 @@ CK_DLL_CTOR(hydra_ctor)
   OBJ_MEMBER_INT(SELF, hydra_data_offset) = 0;
 }
 
+CK_DLL_CTOR(hydra_ctor_init)
+{
+  hydra_ctor(SELF, ARGS, VM, SHRED, API);
+  Chuck_DL_Return* ret = new Chuck_DL_Return;
+  hydra_init(SELF, ARGS, ret, VM, SHRED, API);
+}
+
+CK_DLL_CTOR(hydra_ctor_init_debug)
+{
+  Hydra::debug = true;
+  hydra_ctor(SELF, ARGS, VM, SHRED, API);
+  Chuck_DL_Return* ret = new Chuck_DL_Return;
+  hydra_init(SELF, ARGS, ret, VM, SHRED, API);
+}
+
+CK_DLL_CTOR(hydra_ctor_args)
+{
+  hydra_ctor(SELF, ARGS, VM, SHRED, API);
+  Chuck_DL_Return* ret = new Chuck_DL_Return;
+  hydra_init_args(SELF, ARGS, ret, VM, SHRED, API);
+}
+
+
+CK_DLL_CTOR(hydra_ctor_args_debug)
+{
+  Hydra::debug = true;
+  hydra_ctor(SELF, ARGS, VM, SHRED, API);
+  Chuck_DL_Return* ret = new Chuck_DL_Return;
+  hydra_init_args(SELF, ARGS, ret, VM, SHRED, API);
+}
+
 
 // implementation for the destructor
 CK_DLL_DTOR(hydra_dtor)
@@ -644,6 +703,32 @@ CK_DLL_DTOR(hydra_dtor)
         OBJ_MEMBER_INT(SELF, hydra_data_offset) = 0;
         h_obj = NULL;
     }
+}
+
+
+CK_DLL_MFUN(hydra_init)
+{
+  std::string config_path = GET_NEXT_STRING_SAFE(ARGS);
+  std::string config_name = GET_NEXT_STRING_SAFE(ARGS);
+
+  std::cout << "about to create class\n";
+  // Chuck_DL_Api::Object obj = API->object->create(SHRED,
+  //                                                API->type->lookup(VM, "Hydra"),
+  //                                                false);
+  // // Need to be cast from Object to Chuck_Object in a separate line for some reason...
+  // Chuck_Object * object = (Chuck_Object *) obj;
+  // Hydra * obj_class = (Hydra *) OBJ_MEMBER_INT(object, hydra_data_offset);
+
+  // std::cout << "finished creating class\n";
+  // // because hydra_ctor was never called, this Hydra object was never initializes, this segfaults.
+  // obj_class->set();
+  // std::cout << "called mfun\n";
+
+  // instantiate our internal c++ class representation
+  Hydra * h_obj = new Hydra(config_path, config_name, std::vector<std::string>());
+
+  // store the pointer in the ChucK object member
+  OBJ_MEMBER_INT(SELF, hydra_data_offset) = (t_CKINT) h_obj;
 }
 
 CK_DLL_MFUN(hydra_init_args)
@@ -682,18 +767,6 @@ CK_DLL_MFUN(hydra_init_args)
   OBJ_MEMBER_INT(SELF, hydra_data_offset) = (t_CKINT) h_obj;
 }
 
-
-CK_DLL_MFUN(hydra_init)
-{
-  std::string config_path = GET_NEXT_STRING_SAFE(ARGS);
-  std::string config_name = GET_NEXT_STRING_SAFE(ARGS);
-
-  // instantiate our internal c++ class representation
-  Hydra * h_obj = new Hydra(config_path, config_name, std::vector<std::string>());
-
-  // store the pointer in the ChucK object member
-  OBJ_MEMBER_INT(SELF, hydra_data_offset) = (t_CKINT) h_obj;
-}
 
 
 CK_DLL_MFUN(hydra_get)
@@ -805,19 +878,19 @@ CK_DLL_MFUN(hydra_get_array)
 
   // allocate array object
   // Chuck_ArrayInt * range = new Chuck_ArrayInt(TRUE, size);
-    
+
   Chuck_DL_Api::Object obj = API->object->create(SHRED, API->type->lookup(VM, "int[]"), false);
   Chuck_ArrayInt * object = (Chuck_ArrayInt *) obj;
   std::vector<t_CKUINT> vec;
   object->m_vector = vec;
-  // OBJ_MEMBER_INT(object, 
-    
+  // OBJ_MEMBER_INT(object,
+
 
 
 
   // initialize with trappings of Object
   // initialize_object(range, SHRED->vm_ref->env()->ckt_array);
-    
+
 
   // RETURN->v_object = h_obj->get_bool();
 }

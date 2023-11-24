@@ -280,7 +280,6 @@ public:
       value = str_val;
     } else if (j.is_number()) {
       double num_val = j.template get<double>();
-      std::cout << "val " << num_val << std::endl;
       value = num_val;
     } else if (j.is_boolean()) {
       bool bool_val = j.template get<bool>();
@@ -295,7 +294,6 @@ public:
         auto val = element.value();
         auto key = element.key();
 
-        std::cout << "key " << key << std::endl;
 
         Hydra * elem = new Hydra(val);
         vals[key] = elem;
@@ -693,6 +691,16 @@ CK_DLL_CTOR(hydra_ctor_args_debug)
 // implementation for the destructor
 CK_DLL_DTOR(hydra_dtor)
 {
+    /*
+        TODO: this is currently a memory leak. because the current
+        structure creates a new Chuck_Object for every call to get().
+        However, each chuck object points to the same underlying Hydra
+        class. In order to fix this, there would need to be a heirarchy
+        of Chuck_Objects, rather than Hydra objects so that they can
+        be manually managed, and reference counted, and released when
+        necessary. I'm not going to do that right now because I'm tired.
+    */
+    return;
     // get our c++ class pointer
     Hydra * h_obj = (Hydra *) OBJ_MEMBER_INT(SELF, hydra_data_offset);
     // check it
@@ -711,7 +719,6 @@ CK_DLL_MFUN(hydra_init)
   std::string config_path = GET_NEXT_STRING_SAFE(ARGS);
   std::string config_name = GET_NEXT_STRING_SAFE(ARGS);
 
-  std::cout << "about to create class\n";
   // Chuck_DL_Api::Object obj = API->object->create(SHRED,
   //                                                API->type->lookup(VM, "Hydra"),
   //                                                false);

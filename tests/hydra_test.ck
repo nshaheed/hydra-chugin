@@ -44,6 +44,7 @@ class HydraTest extends Assert {
     }
 
     public void testGetStr() {
+        <<< "testGetStr" >>>;
         h.get("test_str").getString() => string got;
         "poop" => string want;
 
@@ -54,6 +55,7 @@ class HydraTest extends Assert {
     }
 
     public void testGetNested() {
+        <<< "testGetNested" >>>;
         h.get("struct").get("val_str").getString() => string got;
         "pooop" => string want;
 
@@ -61,6 +63,7 @@ class HydraTest extends Assert {
     }
 
     public void testGetAssign() {
+        <<< "testGetAssign" >>>;
         h.get("test_num") @=> Hydra t;
         3 => int want;
 
@@ -68,6 +71,7 @@ class HydraTest extends Assert {
     }
 
     public void testGetInt() {
+        <<< "testGetInt" >>>;
         h.get("test_num").getInt() => int got;
         3 => int want;
 
@@ -78,6 +82,7 @@ class HydraTest extends Assert {
     }
 
     public void testGetFloat() {
+        <<< "testGetFloat" >>>;
         h.get("test_float").getFloat() => float got;
         3.5 => float want;
 
@@ -88,6 +93,7 @@ class HydraTest extends Assert {
     }
 
     public void testGetBool() {
+        <<< "testGetBool" >>>;
         h.get("test_bool").getBool() => int got;
         true => int want;
 
@@ -98,36 +104,43 @@ class HydraTest extends Assert {
     }
 
     public void testIsNull() {
+        <<< "testIsNull" >>>;
         assertTrue(h.get("test_null").isNull());
         assertFalse(h.get("test_num").isNull());
     }
 
     public void testIsConfig() {
+        <<< "testIsConfig" >>>;
         assertTrue(h.get("struct").isConfig());
         assertFalse(h.get("test_num").isConfig());
     }
 
     public void testIsString() {
+        <<< "testIsString" >>>;
         assertTrue(h.get("test_str").isString());
         assertFalse(h.get("test_num").isString());
     }
 
     public void testIsNumber() {
+        <<< "testIsNumber" >>>;
         assertTrue(h.get("test_num").isNumber());
         assertFalse(h.get("test_string").isNumber());
     }
 
     public void testIsBool() {
+        <<< "testIsBool" >>>;
         assertTrue(h.get("test_bool").isBool());
         assertFalse(h.get("test_string").isBool());
     }
 
     public void testIsArray() {
+        <<< "testIsArray" >>>;
         assertTrue(h.get("test_arr").isArray());
         assertFalse(h.get("test_string").isNumber());
     }
 
     public void testGetArray() {
+        <<< "testGetArray" >>>;
         h.get("test_arr").getArray() @=> Hydra got[];
         [1,2,3] @=> int want[];
 
@@ -137,6 +150,7 @@ class HydraTest extends Assert {
     }
 
     public void testSetNull() {
+        <<< "testSetNull" >>>;
         // stateful changes
         Hydra p;
         p.init("configs", "config");
@@ -147,6 +161,7 @@ class HydraTest extends Assert {
     }
 
     public void testSetConfig() {
+        <<< "testSetConfig" >>>;
         // stateful changes
         Hydra p;
         p.init("configs", "config");
@@ -160,6 +175,7 @@ class HydraTest extends Assert {
     }
 
     public void testSetString() {
+        <<< "testSetString" >>>;
         // stateful changes
         Hydra p;
         p.init("configs", "config");
@@ -173,6 +189,7 @@ class HydraTest extends Assert {
     }
 
     public void testSetInt() {
+        <<< "testSetInt" >>>;
         // stateful changes
         Hydra p;
         p.init("configs", "config");
@@ -186,6 +203,7 @@ class HydraTest extends Assert {
     }
 
     public void testSetFloat() {
+        <<< "testSetFloat" >>>;
         // stateful changes
         Hydra p;
         p.init("configs", "config");
@@ -199,6 +217,7 @@ class HydraTest extends Assert {
     }
 
     public void testSetTrue() {
+        <<< "testSetTrue" >>>;
         // stateful changes
         Hydra p;
         p.init("configs", "config");
@@ -209,6 +228,7 @@ class HydraTest extends Assert {
         assertTrue(replace.getBool());
     }
     public void testSetFalse() {
+        <<< "testSetFalse" >>>;
         // stateful changes
         Hydra p;
         p.init("configs", "config");
@@ -220,6 +240,7 @@ class HydraTest extends Assert {
     }
 
     public void testArgsOverwrite() {
+        <<< "testArgsOverwrite" >>>;
         Hydra p;
         ["test_null=false", "struct.val1=fork", "+struct.val2=18"] @=> string args[];
         p.init("configs", "config", args);
@@ -239,12 +260,14 @@ class HydraTest extends Assert {
     }
 
     public void testBadYaml() {
+        <<< "testBadYaml" >>>;
         Hydra p;
         p.init("configs", "bad");
         assertTrue(p.isNull());
     }
 
     public void testBadGetString() {
+        <<< "testBadGetString" >>>;
         h.get("test_num").getString() => string got;
         string want;
 
@@ -252,6 +275,7 @@ class HydraTest extends Assert {
     }
 
     public void testBadGetInt() {
+        <<< "testBadGetInt" >>>;
         h.get("does_not_exist").getInt() => int got;
         int want;
 
@@ -259,6 +283,7 @@ class HydraTest extends Assert {
     }
 
     public void testBadGetFloat() {
+        <<< "testBadGetFloat" >>>;
         h.get("test_str").getFloat() => float got;
         float want;
 
@@ -266,6 +291,7 @@ class HydraTest extends Assert {
     }
 
     public void testBadGetBool() {
+        <<< "testBadGetBool" >>>;
         h.get("test_str").getBool() => int got;
         int want;
 
@@ -273,12 +299,14 @@ class HydraTest extends Assert {
     }
 
     public void testBadGet() {
+       <<< "testBadGet" >>>;
        h.get("test_str").get("test") @=> Hydra got;
 
        assertTrue(got.isNull());
     }
 
     public void testDir() {
+       <<< "testDir" >>>;
        h.dir() => string cwd;
 
        assertNotNull(cwd);

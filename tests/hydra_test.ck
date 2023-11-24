@@ -10,7 +10,7 @@ class HydraTest extends Assert {
         testGetFloat();
         testGetNested();
         testGetAssign();
-        // testGetArray(); // Not implemented yet
+        testGetArray();
 
         testSetNull();
         testSetConfig();
@@ -144,6 +144,7 @@ class HydraTest extends Assert {
         h.get("test_arr").getArray() @=> Hydra got[];
         [1,2,3] @=> int want[];
 
+        assertEquals(want.size(), got.size());
         for (int i: Std.range(want.size())) {
             assertEquals(want[i], got[i].getInt());
         }

@@ -13,7 +13,7 @@
      - [DONE] Int
      - [DONE] Float
      - [DONE] Bool
-     - [INPR] (P1) Array
+     - [DONE] (P1) Array
        - only return list of Hydra
      - [TODO] (P1) Dur
        - parse string as Dur
@@ -42,9 +42,9 @@
          missing or type conversion
        - [DONE] hydra.float() etc...
        - [DONE] ex: hydra.get("foo").get("bar").int() => int a;
-   - [TODO] hydra.dir() - get proper output dir
-     - [TODO] test just call chdir within the chugin
-   - [TODO] hydra.disableChangeDir() - disable changing cwd
+   - [DONE] hydra.dir() - get proper output dir
+   - [TODO] test just call chdir within the chugin
+     - [TODO] hydra.disableChangeDir() - disable changing cwd
    - pass args override from cmd line (see if I can do this automatically)
      - chuck hydra.ck:foo=2:bar=4
    - [INPR] proper error handling
@@ -65,8 +65,7 @@
  */
 
 // this should align with the correct versions of these ChucK files
-#include "chuck_dl.h"
-#include "chuck_def.h"
+#include "chugin.h"
 
 // general includes
 #include <stdio.h>
@@ -752,19 +751,13 @@ CK_DLL_MFUN(hydra_init_args)
 
   std::vector<std::string> args_vector;
 
-  t_CKINT size;
-  API->object->array_int_size(args, size);
+  t_CKINT size = API->object->array_int_size(args);
 
   for (int i = 0; i < size; i++) {
-    t_CKUINT arg;
-    API->object->array_int_get_idx(args, i, arg);
+    t_CKUINT arg = API->object->array_int_get_idx(args, i);
+    Chuck_String* arg_str = (Chuck_String*)arg;
 
-    // Chuck_String* arg = (Chuck_String*) args->m_vector[i];
-    // args->get((t_CKUINT)i, (t_CKUINT*)arg);
-
-    Chuck_String* arg_str = (Chuck_String*) arg;
-
-    args_vector.push_back(arg_str->str());
+    args_vector.push_back(API->object->str(arg_str));
   }
 
   // instantiate our internal c++ class representation
@@ -873,33 +866,24 @@ CK_DLL_MFUN(hydra_get_bool_key)
 
 CK_DLL_MFUN(hydra_get_array)
 {
-  // NOTE: THIS DOESN't WORK YET
   // get our c++ class pointer
   Hydra * h_obj = (Hydra *) OBJ_MEMBER_INT(SELF, hydra_data_offset);
 
-
+  // create array to be returned
+  Chuck_ArrayInt* arr = (Chuck_ArrayInt*)API->object->create(SHRED, API->type->lookup(VM, "int[]"), false);
 
   std::vector<Hydra*> vals = h_obj->get_array();
 
-  t_CKINT size = vals.size();
+  // populate array
+  for (auto val : vals) {
+      Chuck_Object* val_obj = API->object->create(
+          SHRED, API->type->lookup(VM, "Hydra"), false);
 
-  // allocate array object
-  // Chuck_ArrayInt * range = new Chuck_ArrayInt(TRUE, size);
+      OBJ_MEMBER_INT(val_obj, hydra_data_offset) = (t_CKINT)val;
+      API->object->array_int_push_back(arr, (t_CKINT)val_obj);
+  }
 
-  Chuck_DL_Api::Object obj = API->object->create(SHRED, API->type->lookup(VM, "int[]"), false);
-  Chuck_ArrayInt * object = (Chuck_ArrayInt *) obj;
-  std::vector<t_CKUINT> vec;
-  object->m_vector = vec;
-  // OBJ_MEMBER_INT(object,
-
-
-
-
-  // initialize with trappings of Object
-  // initialize_object(range, SHRED->vm_ref->env()->ckt_array);
-
-
-  // RETURN->v_object = h_obj->get_bool();
+  RETURN->v_object = (Chuck_Object*) arr;
 }
 
 CK_DLL_MFUN(hydra_set_null)

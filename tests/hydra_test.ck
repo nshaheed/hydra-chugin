@@ -146,6 +146,7 @@ class HydraTest extends Assert {
 
         assertEquals(want.size(), got.size());
         for (int i: Std.range(want.size())) {
+            // <<< want[i], got[i].getInt() >>>;
             assertEquals(want[i], got[i].getInt());
         }
     }

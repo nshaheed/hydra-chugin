@@ -59,7 +59,7 @@
    - [TODO] Documentation
      - [TODO] Doc strings
      - [TODO] ckdoc
-     - [TODO] Examples folder
+     - [DONE] Examples folder
      - [TODO] Video tutorial
      - [TODO] Written tutorial
  */
@@ -547,29 +547,48 @@ CK_DLL_QUERY( Hydra )
     // begin the class definition
     // can change the second argument to extend a different ChucK class
     QUERY->begin_class(QUERY, "Hydra", "Object");
+    QUERY->doc_class(QUERY, "Read and use yaml config files using the "
+        "Hydra python library! "
+        "Note, this chugin requires that you have python 3 installed "
+        "and you have the hydra library installed. Hydra can be installed"
+        "by calling `pip install hydra-core`."
+    );
 
     // register the constructor (probably no need to change)
     QUERY->add_ctor(QUERY, hydra_ctor);
+    QUERY->doc_func(QUERY, "Constructs the Hydra object, but doesn't load a config file.");
 
     QUERY->add_ctor(QUERY, hydra_ctor_init);
     QUERY->add_arg(QUERY, "string", "config_path");
     QUERY->add_arg(QUERY, "string", "config_name");
+    QUERY->doc_func(QUERY, "Constructs the Hydra object and loads a config file. config_path "
+        "is the directory that the config file is located in, config_name "
+        "is the name of the config file (don't include the .yaml extension)."
+    );
 
     QUERY->add_ctor(QUERY, hydra_ctor_init_debug);
     QUERY->add_arg(QUERY, "string", "config_path");
     QUERY->add_arg(QUERY, "string", "config_name");
     QUERY->add_arg(QUERY, "int", "debug");
+    QUERY->doc_func(QUERY, "Same as Hydra(config_path, config_name), but with debug printing enabled");
 
     QUERY->add_ctor(QUERY, hydra_ctor_args);
     QUERY->add_arg(QUERY, "string", "config_path");
     QUERY->add_arg(QUERY, "string", "config_name");
     QUERY->add_arg(QUERY, "string[]", "args");
+    QUERY->doc_func(QUERY, "Constructs the Hydra object and loads a config file. config_path "
+        "is the directory that the config file is located in, config_name "
+        "is the name of the config file (don't include the .yaml extension). "
+        "args is an array of override arguments (see the offical hydra docs)."
+    );
 
     QUERY->add_ctor(QUERY, hydra_ctor_args_debug);
     QUERY->add_arg(QUERY, "string", "config_path");
     QUERY->add_arg(QUERY, "string", "config_name");
     QUERY->add_arg(QUERY, "string[]", "args");
     QUERY->add_arg(QUERY, "int", "debug");
+    QUERY->doc_func(QUERY, "Same as Hydra(config_path, config_name, args), but with "
+        "debug printing enabled");
 
     // register the destructor (probably no need to change)
     QUERY->add_dtor(QUERY, hydra_dtor);
@@ -578,33 +597,51 @@ CK_DLL_QUERY( Hydra )
     QUERY->add_mfun(QUERY, hydra_init, "void", "init");
     QUERY->add_arg(QUERY, "string", "config_path");
     QUERY->add_arg(QUERY, "string", "config_name");
+    QUERY->doc_func(QUERY, "Load a config file. config_path "
+        "is the directory that the config file is located in, config_name "
+        "is the name of the config file (don't include the .yaml extension). "
+        "args is an array of override arguments (see the offical hydra docs)."
+    );
 
     QUERY->add_mfun(QUERY, hydra_init_args, "void", "init");
     QUERY->add_arg(QUERY, "string", "config_path");
     QUERY->add_arg(QUERY, "string", "config_name");
     QUERY->add_arg(QUERY, "string[]", "args");
+    QUERY->doc_func(QUERY, "Load a config file. config_path "
+        "is the directory that the config file is located in, config_name "
+        "is the name of the config file (don't include the .yaml extension). "
+        "args is an array of override arguments (see the offical hydra docs)."
+    );
 
     // Getters
     QUERY->add_mfun(QUERY, hydra_get, "Hydra", "get");
     QUERY->add_arg(QUERY, "string", "key");
+    QUERY->doc_func(QUERY, "Get the value at key. On failure returns null");
 
     QUERY->add_mfun(QUERY, hydra_get_str, "string", "getString");
     QUERY->add_mfun(QUERY, hydra_get_str_key, "string", "getString");
     QUERY->add_arg(QUERY, "string", "key");
+    QUERY->doc_func(QUERY, "Get the string at key. On failure returns \"\"");
+
 
     QUERY->add_mfun(QUERY, hydra_get_int, "int", "getInt");
     QUERY->add_mfun(QUERY, hydra_get_int_key, "int", "getInt");
     QUERY->add_arg(QUERY, "string", "key");
+    QUERY->doc_func(QUERY, "Get the int at key. On failure returns 0");
 
     QUERY->add_mfun(QUERY, hydra_get_float, "float", "getFloat");
     QUERY->add_mfun(QUERY, hydra_get_float_key, "float", "getFloat");
     QUERY->add_arg(QUERY, "string", "key");
+    QUERY->doc_func(QUERY, "Get the float at key. On failure returns 0");
 
     QUERY->add_mfun(QUERY, hydra_get_bool, "int", "getBool");
     QUERY->add_mfun(QUERY, hydra_get_bool_key, "int", "getBool");
     QUERY->add_arg(QUERY, "string", "key");
+    QUERY->doc_func(QUERY, "Get the bool at key. On failure returns \"\"");
+
 
     QUERY->add_mfun(QUERY, hydra_get_array, "Hydra[]", "getArray");
+    QUERY->doc_func(QUERY, "Get the array. On failure returns an empty array");
 
     // Setters
     QUERY->add_mfun(QUERY, hydra_set_null, "Hydra", "set");
@@ -868,6 +905,9 @@ CK_DLL_MFUN(hydra_get_array)
 {
   // get our c++ class pointer
   Hydra * h_obj = (Hydra *) OBJ_MEMBER_INT(SELF, hydra_data_offset);
+
+  std::string key = GET_NEXT_STRING_SAFE(ARGS);
+
 
   // create array to be returned
   Chuck_ArrayInt* arr = (Chuck_ArrayInt*)API->object->create(SHRED, API->type->lookup(VM, "int[]"), false);

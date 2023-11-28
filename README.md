@@ -1,4 +1,4 @@
-# Hydra chugin
+# Hydra Chugin
 
 This chugin is a wrapper around the python configuration framework [Hydra](https://hydra.cc/). The tl;dr here of that hydra is a really robust, composable configuration framework that lets you do a ton of things including dynamically composing config files, manage outputs, and is a generally nice workflow when you're constantly twiddling with a bunch of variables.
 
@@ -17,10 +17,10 @@ make a separate hydra environment:
 
 ### Building Hydra
 Now that you have hydra installed, you can build the chugin using cmake.
-- Navigate to the `Hydra` directory in your terminal of choice.
-- Create a `build` directory: `mkdir build; cd build`
-- `cmake . -S ../`
-- `cmake --build .`
+- `git clone --recurse-submodules https://github.com/nshaheed/hydra-chugin.git`
+- `cd hydra-chugin`
+- `cmake -S . -B build`
+- `cmake --build build/ --config Release`
 - This should automatically install `Hydra.chug` to the relevant directory. Now `Hydra` should show up as a class in chuck!
 
 ## Examples
@@ -55,7 +55,7 @@ cfg.getFloat("gain") => g.gain;
 cfg.get("blit").getFloat("freq") => b.freq;
 cfg.get("blit").getInt("harmonics") => b.harmonics;
 
-1::eon => now;
+eon => now;
 ```
 
 Run `chuck basic.ck` and hear the results
@@ -85,7 +85,7 @@ cfg.getFloat("gain") => g.gain;
 cfg.get("blit").getFloat("freq") => b.freq;
 cfg.get("blit").getInt("harmonics") => b.harmonics;
 
-1::eon => now;
+eon => now;
 
 ```
 

@@ -3,15 +3,12 @@ project(hydra VERSION 0.0.1)
 
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT hydra)
 
-# option(BUILD_SHARED_LIBS "Build using shared libraries" OFF)
-
-find_package(Python REQUIRED COMPONENTS Interpreter Development)
-# find_package(PythonLibs REQUIRED)
-
 # list of chuck files
 FILE(GLOB CK_SOURCES
-  ${CMAKE_CURRENT_SOURCE_DIR}/../chuck/include/*.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/cheaders/include/*.h
   )
+
+include_directories(cheaders/include)
 
 FILE(GLOB readme
   "${CMAKE_CURRENT_SOURCE_DIR}/README.md"
@@ -51,17 +48,9 @@ ELSEIF(UNIX)
     ) 
 ENDIF()
 
-  
-target_link_libraries(hydra PRIVATE Python::Python)
-
-include_directories(${Python_INCLUDE_DIRS})
-target_link_libraries(hydra ${PYTHON_LIBRARIES})
-# I don't think this is necessary?
-# SET(CMAKE_INSTALL_RPATH Python::Python)
-
 # Include header directories
 target_include_directories(hydra PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../chuck/include>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../cheaders/include>
     $<INSTALL_INTERFACE:hydra
     )
 
@@ -75,7 +64,6 @@ INSTALL(
   )
 
 IF (WIN32)
-    message(POOP="%USERPROFILE%/Documents/chuck/chugins")
     add_custom_command(TARGET ${PROJECT_NAME}
       POST_BUILD
       COMMAND ${CMAKE_COMMAND} -E copy_if_different

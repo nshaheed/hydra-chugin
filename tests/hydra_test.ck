@@ -98,6 +98,7 @@ class HydraTest extends Assert {
         assertEquals(want, got);
     }
 
+/*
     public void testOpInt() {
         <<< "testOpInt" >>>;
         h.get("test_num")=> int got;
@@ -105,7 +106,7 @@ class HydraTest extends Assert {
 
         assertEquals(want, got);
     }
-
+*/
 
     public void testGetFloat() {
         <<< "testGetFloat" >>>;

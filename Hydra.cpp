@@ -113,6 +113,12 @@ CK_DLL_MFUN(hydra_get_bool_key);
 CK_DLL_MFUN(hydra_get_array);
 CK_DLL_MFUN(hydra_get_array_key);
 
+// op overloads
+CK_DLL_GFUN(hydra_get_str_op);
+CK_DLL_GFUN(hydra_get_int_op);
+CK_DLL_GFUN(hydra_get_float_op);
+CK_DLL_GFUN(hydra_get_array_op);
+
 CK_DLL_MFUN(hydra_is_null);
 CK_DLL_MFUN(hydra_is_config);
 CK_DLL_MFUN(hydra_is_str);
@@ -658,6 +664,17 @@ CK_DLL_QUERY( Hydra )
     QUERY->add_arg(QUERY, "string", "key");
     QUERY->doc_func(QUERY, "Get the array. On failure returns an empty array");
 
+    // assignment operator (=>) overloads
+    QUERY->add_op_overload_binary(QUERY, hydra_get_str_op, "Hydra", "=>",
+        "Hydra", "lhs", "string", "rhs");
+    /* TODO
+    QUERY->add_op_overload_binary(QUERY, hydra_get_int_op, "Hydra", "=>",
+        "Hydra", "lhs", "int", "rhs");
+    QUERY->add_op_overload_binary(QUERY, hydra_get_float_op, "Hydra", "=>",
+        "Hydra", "lhs", "float", "rhs");
+    QUERY->add_op_overload_binary(QUERY, hydra_get_array_op, "Hydra", "=>",
+        "Hydra", "lhs", "Hydra[]", "rhs");
+    */
 
     // Setters
     QUERY->add_mfun(QUERY, hydra_set_null, "Hydra", "set");
@@ -962,6 +979,60 @@ CK_DLL_MFUN(hydra_get_array_key)
     }
 
     RETURN->v_object = (Chuck_Object*)arr;
+}
+
+// Operator (=>) overloads
+
+CK_DLL_GFUN(hydra_get_str_op) {
+    // get the arguments
+    Chuck_Object* lhs = GET_NEXT_OBJECT(ARGS);
+    Chuck_String* rhs = GET_NEXT_STRING(ARGS);
+
+    if (!lhs || !rhs) {
+        std::string errMsg = std::string("in => operator: ") + (lhs ? "LHS" : "[null]") + " => " + (rhs ? "RHS" : "[null]");
+        // nullptr exception
+        API->vm->throw_exception(
+            "NullPointerException",
+            errMsg.c_str(),
+            SHRED
+        );
+        return;
+    }
+
+    Hydra* h_obj = (Hydra*)OBJ_MEMBER_INT(lhs, hydra_data_offset);
+
+    API->object->set_string(rhs, h_obj->get_string().c_str());
+}
+
+CK_DLL_GFUN(hydra_get_int_op) {
+    // get the arguments
+    Chuck_Object* lhs = GET_NEXT_OBJECT(ARGS);
+    t_CKINT rhs = GET_CK_INT(ARGS);
+
+    if (!lhs) {
+        std::string errMsg = std::string("in => operator: ") + (lhs ? "LHS" : "[null]") + " => " + "RHS";
+        // nullptr exception
+        API->vm->throw_exception(
+            "NullPointerException",
+            errMsg.c_str(),
+            SHRED
+        );
+        return;
+    }
+    
+    Hydra* h_obj = (Hydra*)OBJ_MEMBER_INT(lhs, hydra_data_offset);
+    t_CKINT val = h_obj->get_int();
+
+    SET_CK_INT(ARGS, val);
+    std::cout << *(t_CKUINT*&)ARGS << std::endl;
+}
+
+CK_DLL_GFUN(hydra_get_float_op) {
+
+}
+
+CK_DLL_GFUN(hydra_get_array_op) {
+
 }
 
 CK_DLL_MFUN(hydra_set_null)

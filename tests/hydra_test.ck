@@ -13,6 +13,13 @@ class HydraTest extends Assert {
         testGetArray();
         testGetArray2();
 
+        // test => overloading
+        testOpStr();
+        //testOpInt();
+        //testOpBool();
+        //testOpFloat();
+        //testOpArray();
+
         testSetNull();
         testSetConfig();
         testSetString();
@@ -55,6 +62,15 @@ class HydraTest extends Assert {
         assertEquals(want, got);
     }
 
+    public void testOpStr() {
+        <<< "testOpStr" >>>;
+        h.get("test_str") => string got;
+        "poop" => string want;
+
+        assertEquals(want, got);
+    }
+
+
     public void testGetNested() {
         <<< "testGetNested" >>>;
         h.get("struct").get("val_str").getString() => string got;
@@ -81,6 +97,15 @@ class HydraTest extends Assert {
         h.getInt("test_num") => got;
         assertEquals(want, got);
     }
+
+    public void testOpInt() {
+        <<< "testOpInt" >>>;
+        h.get("test_num")=> int got;
+        3 => int want;
+
+        assertEquals(want, got);
+    }
+
 
     public void testGetFloat() {
         <<< "testGetFloat" >>>;

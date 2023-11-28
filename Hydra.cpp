@@ -111,6 +111,7 @@ CK_DLL_MFUN(hydra_get_float_key);
 CK_DLL_MFUN(hydra_get_bool);
 CK_DLL_MFUN(hydra_get_bool_key);
 CK_DLL_MFUN(hydra_get_array);
+CK_DLL_MFUN(hydra_get_array_key);
 
 CK_DLL_MFUN(hydra_is_null);
 CK_DLL_MFUN(hydra_is_config);
@@ -413,6 +414,16 @@ public:
     return std::vector<Hydra*>();
   }
 
+  std::vector<Hydra*> get_array(std::string key) {
+      if (Hydra* v = this->get(key)) {
+          return v->get_array();
+      }
+
+      std::cerr << "Unable to read Hydra value (" << this->get_type_string(&value) << ") as array" << std::endl;
+      return std::vector<Hydra*>();
+  }
+
+
   t_CKINT is_null() {
     // check if variant is in monostate
     if(value.index() == 0) {
@@ -643,6 +654,11 @@ CK_DLL_QUERY( Hydra )
     QUERY->add_mfun(QUERY, hydra_get_array, "Hydra[]", "getArray");
     QUERY->doc_func(QUERY, "Get the array. On failure returns an empty array");
 
+    QUERY->add_mfun(QUERY, hydra_get_array_key, "Hydra[]", "getArray");
+    QUERY->add_arg(QUERY, "string", "key");
+    QUERY->doc_func(QUERY, "Get the array. On failure returns an empty array");
+
+
     // Setters
     QUERY->add_mfun(QUERY, hydra_set_null, "Hydra", "set");
     QUERY->add_mfun(QUERY, hydra_set_config, "Hydra", "set");
@@ -656,6 +672,7 @@ CK_DLL_QUERY( Hydra )
     QUERY->add_mfun(QUERY, hydra_set_true, "Hydra", "setTrue");
     QUERY->add_mfun(QUERY, hydra_set_false, "Hydra", "setFalse");
     // TODO set array
+
 
     // Type checkers
     QUERY->add_mfun(QUERY, hydra_is_null, "int", "isNull");
@@ -906,9 +923,6 @@ CK_DLL_MFUN(hydra_get_array)
   // get our c++ class pointer
   Hydra * h_obj = (Hydra *) OBJ_MEMBER_INT(SELF, hydra_data_offset);
 
-  std::string key = GET_NEXT_STRING_SAFE(ARGS);
-
-
   // create array to be returned
   Chuck_ArrayInt* arr = (Chuck_ArrayInt*)API->object->create(SHRED, API->type->lookup(VM, "int[]"), false);
 
@@ -924,6 +938,30 @@ CK_DLL_MFUN(hydra_get_array)
   }
 
   RETURN->v_object = (Chuck_Object*) arr;
+}
+
+CK_DLL_MFUN(hydra_get_array_key)
+{
+    // get our c++ class pointer
+    Hydra* h_obj = (Hydra*)OBJ_MEMBER_INT(SELF, hydra_data_offset);
+
+    std::string key = GET_NEXT_STRING_SAFE(ARGS);
+
+    // create array to be returned
+    Chuck_ArrayInt* arr = (Chuck_ArrayInt*)API->object->create(SHRED, API->type->lookup(VM, "int[]"), false);
+
+    std::vector<Hydra*> vals = h_obj->get_array(key);
+
+    // populate array
+    for (auto val : vals) {
+        Chuck_Object* val_obj = API->object->create(
+            SHRED, API->type->lookup(VM, "Hydra"), false);
+
+        OBJ_MEMBER_INT(val_obj, hydra_data_offset) = (t_CKINT)val;
+        API->object->array_int_push_back(arr, (t_CKINT)val_obj);
+    }
+
+    RETURN->v_object = (Chuck_Object*)arr;
 }
 
 CK_DLL_MFUN(hydra_set_null)

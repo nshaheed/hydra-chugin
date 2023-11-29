@@ -39,6 +39,9 @@ jobs:
       # Build your program with the given configuration. Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
       run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config Release
 
+    - name: Chuck Dependencies - Linux
+      run: sudo apt update && sudo apt install --fix-missing -y libsndfile1-dev libpulse-dev libasound2-dev
+
     - name: Download Chuck
       run: git clone https://github.com/ccrma/chuck.git
 

@@ -47,7 +47,7 @@ jobs:
 
     - name: Build Chuck
       working-directory: chuck/
-      run: cd src/ && make -j linux-all
+      run: cd src/ && make -j linux-pulse
 
     - name: Test
       working-directory: tests

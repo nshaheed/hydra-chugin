@@ -53,4 +53,4 @@ jobs:
       working-directory: tests
       # Execute tests defined by the CMake configuration. Note that --build-config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
-      run: ../chuck/src/chuck run_test.ck
+      run: ../chuck/src/chuck -s run_test.ck

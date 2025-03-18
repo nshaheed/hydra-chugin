@@ -16,12 +16,15 @@ make a separate hydra environment:
 [Cmake](https://cmake.org/) also needs to be installed in order to build the chugin.
 
 ### Building Hydra
-Now that you have hydra installed, you can build the chugin using cmake.
+Now that you have hydra installed, you can build the chugin:
 - `git clone --recurse-submodules https://github.com/nshaheed/hydra-chugin.git`
 - `cd hydra-chugin`
-- `cmake -S . -B build`
-- `cmake --build build/ --config Release`
-- This should automatically install `Hydra.chug` to the relevant directory. Now `Hydra` should show up as a class in chuck!
+- `git submodule update --init`
+- `make <mac|linux|win>`
+
+`Hydra.chug` will be located in the `./` directory.
+
+If you are building on windows using cmd or powershell, you will need to copy+paste the command from the `setup-win` and `win` targets in `makefile`.
 
 ## Examples
 See the [examples](examples/) folder for more examples. Fore a more complete

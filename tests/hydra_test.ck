@@ -1,3 +1,6 @@
+@import "Assert"
+@import "../build/Hydra.chug"
+
 class HydraTest extends Assert {
     Hydra h;
     h.init("configs", "config");

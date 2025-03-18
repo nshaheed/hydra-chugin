@@ -1,3 +1,5 @@
+@import "../Hydra.chug"
+
 // basic_args.ck
 Blit b => Gain g => dac;
 
@@ -12,7 +14,7 @@ for (auto i : Std.range(me.args())) {
 Hydra cfg;
 // Initialize cfg with our config.yaml
 // The third argument lets you pass config overrides
-cfg.init("configs", "basic", args);
+cfg.init(me.dir() + "configs", "basic", args);
 
 // Grab the gain value
 cfg.getFloat("gain") => g.gain;

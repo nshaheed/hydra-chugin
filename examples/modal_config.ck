@@ -1,3 +1,5 @@
+@import "../Hydra.chug"
+
 // An example of using Hydra to configure different 
 // presets for the ModalBar UGen.
 
@@ -24,9 +26,9 @@ for (auto i : Std.range(me.args())) {
 }
 
 // If you don't want to provide any overrides, simply call
-// cfg.init("configs", "modal")
+// cfg.init(me.dir() + "configs", "modal")
 // true => cfg.debug;
-cfg.init("configs", "modal", args); // opens up ./configs/modal.yaml
+cfg.init(me.dir() + "configs", "modal", args); // opens up ./configs/modal.yaml
 
 // Set the tempo
 1::minute / cfg.getFloat("tempo") => dur tempo;

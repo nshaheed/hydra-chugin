@@ -3,6 +3,8 @@ project(hydra VERSION 0.0.1)
 
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT hydra)
 
+set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64")
+
 # list of chuck files
 FILE(GLOB CK_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/cheaders/include/*.h

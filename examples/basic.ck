@@ -1,3 +1,5 @@
+@import "../Hydra.chug"
+
 // basic.ck
 Blit b => Gain g => dac;
 
@@ -6,7 +8,7 @@ Blit b => Gain g => dac;
 // First arg: the directory where the config is stored
 // Second arg: the config file name (don't include .yaml)
 
-Hydra cfg("configs", "basic");
+Hydra cfg(me.dir() + "configs", "basic");
 
 // View all the functions and descriptors.
 // cfg.help();

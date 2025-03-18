@@ -30,8 +30,8 @@ linux: setup-linux
 setup-win:
 	cmake . -S . -B build -DCMAKE_BUILD_TYPE=Release -G "Visual Studio 17 2022" -A "x64"
 win:
-	cmake --build . --config Release
-	cp build/Hydra.chug .
+	cmake --build build --config Release
+	cp build/Release/Hydra.chug .
 
 clean: 
 	rm -rf $(C_OBJECTS) $(CXX_OBJECTS) $(CHUG) Release Debug build Hydra.chug
